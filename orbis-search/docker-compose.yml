@@ -48,4 +48,4 @@ volumes:
 
 networks:
   default:
-    name: oncall-network
+    name: orbis-network

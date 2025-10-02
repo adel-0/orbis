@@ -4,7 +4,7 @@ Automated poller for Azure DevOps work items.
 Behavior:
 - Polls Azure DevOps for newly created/changed work items (since last run) using the Reporting API
 - Processes ALL work items in the defined area path (no tag filtering)
-- For each work item, searches for top 3 related tickets using the local OnCall Copilot API (/search)
+- For each work item, searches for top 3 related tickets using the local Orbis Search API (/search)
 - Posts a comment with the top 3 related tickets and hyperlinks (no summary generation)
 - For existing work items, detects and updates existing AI-generated comments instead of creating new ones
 - Includes AI attribution stamp with timestamp and version
@@ -17,7 +17,7 @@ Configuration via in-file constants (edit below):
   - PAT: Set USE_OAUTH2=False, AZDO_PAT (scopes: Work Items (Read & Write))
 - ITERATION_PREFIX (optional)  e.g., "MyProject\Iteration 1"
 - AREA_PREFIX (optional)       e.g., "MyProject\Area\SubArea"
-- API_BASE_URL (default: "http://oncall-api:7887")
+- API_BASE_URL (default: "http://api:7887")
 - POLL_SECONDS (default: 10)
 - TOPK (default: 3)
 - STATE_PATH (default: ".ado_related/state.json")
@@ -68,8 +68,9 @@ DEFAULT_POLL_SECONDS: int = 30
 DEFAULT_TOPK: int = 3
 DEFAULT_STATE_PATH: str = ".ado_related/state.json"
 
-# Use local OnCall Copilot API /search to get related tickets and summary
+# Use local Orbis Search API /search to get related tickets and summary
 # The poller will call your FastAPI (main.py) at the address below.
+# Note: "api" is the Docker Compose service name
 DEFAULT_USE_LOCAL_SEARCH: bool = True
 DEFAULT_API_BASE_URL: str = "http://api:7887"
 # If your API has API key protection enabled, set these accordingly
@@ -82,7 +83,7 @@ DEFAULT_API_KEY: str = ""
 # values below are used.
 DEFAULT_LINK_ORG: str = "hexagon-si-gpc"
 DEFAULT_LINK_PROJECT: str = "GPC Support"
-DEFAULT_BOT_IDENTITY_NAME: str = "HxGN-SI-ZUR-oncall-copilot"
+DEFAULT_BOT_IDENTITY_NAME: str = "HxGN-SI-ZUR-orbis-search"
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -333,7 +334,7 @@ def render_comment_html(*, org: str, project: str, new_title: str, hits: List[Di
     footer = (
         f"<div style=\"margin-top:16px; padding-top:8px; border-top:1px solid #e0e0e0; "
         f"font-size:11px; color:#888; font-style:italic;\">"
-        f"Bip Bop, I'm a robot • {timestamp} • OnCall Copilot v{version}"
+        f"Bip Bop, I'm a robot • {timestamp} • Orbis Search v{version}"
         f"</div>"
     )
     parts.append(footer)
@@ -399,7 +400,7 @@ async def find_ai_comment(
         for comment in comments:
             comment_text = comment.get("text", "")
             # Check for our AI attribution stamp that's always added
-            if ("AI-generated response" in comment_text or "Bip Bop, I'm a robot" in comment_text) and "OnCall Copilot v" in comment_text:
+            if ("AI-generated response" in comment_text or "Bip Bop, I'm a robot" in comment_text) and ("OnCall Copilot v" in comment_text or "Orbis Search v" in comment_text):
                 log(f"Found existing AI comment on WI #{workitem_id} (ID: {comment.get('id')})")
                 return comment
         

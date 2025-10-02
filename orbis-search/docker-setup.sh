@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# OnCall Copilot Docker Setup Script
+# Orbis Search Docker Setup Script
 # This script automates the Docker deployment process
 
 set -e
 
-echo "🚀 OnCall Copilot Docker Setup"
+echo "🚀 Orbis Search Docker Setup"
 echo "================================"
 
 # Check if Docker is running
@@ -60,7 +60,7 @@ else
 fi
 
 # Start the services
-echo "🚀 Starting OnCall Copilot services..."
+echo "🚀 Starting Orbis Search services..."
 docker compose up -d
 
 # Wait for service to be ready
@@ -72,15 +72,15 @@ echo "🏥 Checking service health..."
 if curl -f http://localhost:7887/health > /dev/null 2>&1; then
     echo "✅ Service is healthy!"
     echo ""
-    echo "🎉 OnCall Copilot is now running!"
+    echo "🎉 Orbis Search is now running!"
     echo "   API: http://localhost:7887"
     echo "   Docs: http://localhost:7887/docs"
     echo "   Health: http://localhost:7887/health"
     echo ""
-    echo "📊 Monitor API logs with: docker compose logs -f oncall-api"
-    echo "📊 Monitor poller logs with: docker compose logs -f oncall-poller"
+    echo "📊 Monitor API logs with: docker compose logs -f api"
+    echo "📊 Monitor poller logs with: docker compose logs -f poller"
     echo "🛑 Stop services with: docker compose down"
 else
-    echo "❌ Service health check failed. Check logs with: docker compose logs oncall-api oncall-poller"
+    echo "❌ Service health check failed. Check logs with: docker compose logs api poller"
     exit 1
 fi

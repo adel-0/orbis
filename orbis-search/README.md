@@ -1,6 +1,6 @@
-# OnCall Copilot Classic
+# Orbis Search
 
-A lightweight semantic search system for Azure DevOps tickets. This is a streamlined version of OnCall Copilot focused on providing fast, accurate semantic search of relevant Azure DevOps work items using local embedding models and vector database technology.
+A lightweight semantic search system for Azure DevOps tickets. This is a streamlined version of Orbis focused on providing fast, accurate semantic search of relevant Azure DevOps work items using local embedding models and vector database technology.
 
 ## 🚀 Quick Start
 
@@ -14,8 +14,8 @@ A lightweight semantic search system for Azure DevOps tickets. This is a streaml
 
 ```bash
 # Clone repository
-git clone https://github.com/adel-0/oncall-copilot-classic
-cd oncall-copilot-classic
+git clone https://github.com/adel-0/orbis-search
+cd orbis-search
 
 # Install dependencies
 uv sync
@@ -69,7 +69,7 @@ curl http://localhost:7887/health
 ### Container Management
 ```bash
 # View logs
-docker-compose logs -f oncall-api
+docker-compose logs -f api
 
 # Stop services
 docker-compose down
@@ -125,7 +125,7 @@ CHROMA_COLLECTION_NAME=workitems
 CHROMA_DB_PATH=data/chroma_db
 
 # Database (defaults to SQLite)
-DATABASE_URL=sqlite:///data/database/oncall_copilot.db
+DATABASE_URL=sqlite:///data/database/orbis_search.db
 
 # Data Ingestion Configuration
 USE_INCREMENTAL_SYNC=true

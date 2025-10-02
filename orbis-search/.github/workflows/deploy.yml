@@ -26,7 +26,7 @@ jobs:
 
         # Deploy on server
         sshpass -e ssh -o StrictHostKeyChecking=no hexagon@${{ secrets.SERVER_HOST }} << 'EOF'
-          cd /home/hexagon/oncall-copilot-classic
+          cd /home/hexagon/orbis-search
 
           # Stop running containers first
           docker compose down || true

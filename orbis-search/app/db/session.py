@@ -1,5 +1,5 @@
 """
-Database management for OnCall Copilot.
+Database management for Orbis Search.
 """
 
 import os
@@ -30,7 +30,7 @@ class DatabaseManager:
             else:
                 # Default to SQLite database in data directory
                 os.makedirs("data/database", exist_ok=True)
-                database_url = "sqlite:///data/database/oncall_copilot.db"
+                database_url = "sqlite:///data/database/orbis_search.db"
 
         logger.info(f"Initializing database: {database_url}")
 

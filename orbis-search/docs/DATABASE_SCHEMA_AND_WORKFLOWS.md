@@ -1,6 +1,6 @@
 # Database Schema and Workflows
 
-This document provides a comprehensive overview of the database schema, data relationships, and key workflows in the OnCall Copilot system.
+This document provides a comprehensive overview of the database schema, data relationships, and key workflows in the Orbis Search system.
 
 ## Table of Contents
 
@@ -12,10 +12,10 @@ This document provides a comprehensive overview of the database schema, data rel
 
 ## Database Schema Overview
 
-The OnCall Copilot uses SQLite for relational data storage and ChromaDB for vector embeddings. The system maintains data across two primary storage systems:
+Orbis Search uses SQLite for relational data storage and ChromaDB for vector embeddings. The system maintains data across two primary storage systems:
 
 ### SQLite Database (Relational Data)
-- **Location**: `data/database/oncall_copilot.db`
+- **Location**: `data/database/orbis_search.db`
 - **Purpose**: Stores structured data, configurations, and metadata
 - **Tables**: DataSources, WorkItems, and related entities
 
@@ -376,4 +376,4 @@ User Query: "authentication issues"
 
 ---
 
-This schema documentation provides the foundation for understanding how data flows through the OnCall Copilot system and how the various components interact to provide intelligent search capabilities.
+This schema documentation provides the foundation for understanding how data flows through the Orbis Search system and how the various components interact to provide intelligent search capabilities.
