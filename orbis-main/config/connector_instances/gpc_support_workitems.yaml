@@ -1,0 +1,13 @@
+name: "GPC Support Work Items"
+source_type: "azdo_workitems"
+enabled: true
+weight: 1.0
+context_tags: ["support", "gpc"]
+
+config:
+  organization: "hexagon-si-gpc"
+  project: "GPC Support"
+  auth_type: "pat"
+  pat: "REDACTED_PAT_GPC_SUPPORT"
+  query_ids: ["77e3275a-5153-4ba4-b3f1-13c0ab5d4d5b"]
+  use_incremental_sync: true

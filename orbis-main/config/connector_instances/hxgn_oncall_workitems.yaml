@@ -1,0 +1,15 @@
+name: "HxGN OnCall Work Items"
+source_type: "azdo_workitems"
+enabled: true
+weight: 1.0
+context_tags: ["development", "oncall", "zur"]
+
+config:
+  organization: "hxgn-si-zur"
+  project: "HxGN OnCall"
+  auth_type: "oauth2"
+  client_id: "33ddc298-e780-41ea-85b5-451f6aa10cd9"
+  client_secret: "REDACTED_CLIENT_SECRET"
+  tenant_id: "1b16ab3e-b8f6-4fe3-9f3e-2db7fe549f6a"
+  query_ids: ["92eaa9af-d347-4400-a8f5-9392022d08c2"]
+  use_incremental_sync: true

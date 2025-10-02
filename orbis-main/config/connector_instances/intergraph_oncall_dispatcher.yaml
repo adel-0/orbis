@@ -1,0 +1,10 @@
+# IntergraphOnCallDispatcher Web Help Instance
+name: "IntergraphOnCallDispatcher"
+source_type: "oncall_web_help"
+enabled: true
+weight: 1.0
+config:
+  folder_path: "data/sources/oncall_web_help/IntergraphOnCallDispatcher"
+  options:
+    file_extensions: [".html", ".htm"]
+    recursive: true

@@ -1,0 +1,29 @@
+# Cursor Rules
+
+This file provides guidance to Cursor when working with code in this repository.
+
+## Common Development Commands
+
+### Running the Application
+```bash
+# Always activate virtual environment first
+source .venv/bin/activate  # Bash
+.\.venv\Scripts\Activate.ps1  # PowerShell
+
+# Start the API server
+uv run main.py
+# Server runs on http://localhost:7887 by default
+```
+
+### Dependencies
+```bash
+# Install all dependencies
+uv sync
+```
+
+### Folders to ignore
+Always exclude .venv and __pycache__ folders when analysing folders.
+
+## Implementation Lessons Learned
+
+Core principle: KISS.

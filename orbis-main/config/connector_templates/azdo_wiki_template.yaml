@@ -1,0 +1,34 @@
+# All wikis with exclusions (recommended)
+name: "CHANGE_ME - All Wikis"
+source_type: "azdo_wiki"
+config:
+  organization: "hexagon"
+  project: "CHANGE_ME"
+  auth_type: "pat"
+  pat: "${AZDO_PAT}"
+  excluded_wikis: ["temp.wiki", "archive.wiki"]
+  enable_auto_summarization: true  # Set to false to disable automatic wiki summarization
+
+# Specific wikis only (optional)
+# name: "CHANGE_ME - Specific Wikis"
+# source_type: "azdo_wiki"
+# config:
+#   organization: "hexagon"
+#   project: "CHANGE_ME"
+#   auth_type: "pat"
+#   pat: "${AZDO_PAT}"
+#   included_wikis: ["wiki1.wiki", "wiki2.wiki"]
+#   enable_auto_summarization: true
+
+# OAuth2 Authentication
+# name: "CHANGE_ME - All Wikis"
+# source_type: "azdo_wiki"
+# config:
+#   organization: "hexagon"
+#   project: "CHANGE_ME"
+#   auth_type: "oauth2"
+#   client_id: "${AZDO_CLIENT_ID}"
+#   client_secret: "${AZDO_CLIENT_SECRET}"
+#   tenant_id: "${AZDO_TENANT_ID}"
+#   excluded_wikis: ["temp.wiki", "archive.wiki"]
+#   enable_auto_summarization: true

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(nvidia-smi:*)",
+      "Bash(tasklist:*)",
+      "Bash(wmic process:*)",
+      "Bash(python:*)",
+      "Bash(uv run:*)",
+      "Bash(find:*)",
+      "Bash(git clone:*)",
+      "Bash(if [ -d \"C:\\Users\\adeligan\\Git\\orbis\\.temp\\oncall-copilot\" ])",
+      "Bash([ -d \"C:\\Users\\adeligan\\Git\\orbis\\.temp\\oncall-copilot-classic\" ])",
+      "Bash(then echo \"Clone complete\")",
+      "Bash(else echo \"Still cloning\")",
+      "Bash(fi)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

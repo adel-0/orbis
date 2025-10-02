@@ -1,0 +1,43 @@
+name: Deploy to Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
+    - name: Deploy to server
+      env:
+        SSHPASS: ${{ secrets.DEPLOY_PASSWORD }}
+      run: |
+        # Create deployment archive (exclude data folder to preserve it)
+        tar --exclude='.git' --exclude='.venv' --exclude='__pycache__' --exclude='.env' --exclude='data' --exclude='deploy.*' -czf deploy.tar.gz . || true
+
+        # Copy to server
+        sshpass -e scp -o StrictHostKeyChecking=no deploy.tar.gz hexagon@${{ secrets.SERVER_HOST }}:/tmp/
+
+        # Deploy on server
+        sshpass -e ssh -o StrictHostKeyChecking=no hexagon@${{ secrets.SERVER_HOST }} << 'EOF'
+          cd /home/hexagon/oncall-copilot-classic
+
+          # Stop running containers first
+          docker compose down || true
+
+          # Extract new version (overwrites existing files, data folder is excluded)
+          tar -xzf /tmp/deploy.tar.gz
+          rm /tmp/deploy.tar.gz
+
+          # Build and deploy with docker compose
+          docker compose build
+          docker compose up -d
+
+          echo "✅ Deployment completed successfully!"
+        EOF

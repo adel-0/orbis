@@ -1,0 +1,16 @@
+area_path_mappings:
+  "HxGN OnCall\\SG\\SG NEZ Operations": "SG"
+  "HxGN OnCall\\SG": "SG"
+  "St. Gallen": "SG"
+  "Valais": "VS"
+  "Wallis": "VS"
+
+project_configs:
+  SG:
+    project_code: "SG"
+    wiki_repos:
+      - "Wiki.SG"
+  VS:
+    project_code: "VS"
+    wiki_repos:
+      - "Wiki.VS"

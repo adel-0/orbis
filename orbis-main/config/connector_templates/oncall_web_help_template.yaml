@@ -1,0 +1,10 @@
+# OnCall Web Help - Local HTML Files
+
+# DEFAULT CONFIGURATION - Uses built-in data/sources/oncall_web_help/ directory
+name: "OnCall Web Help - Default Location"
+source_type: "oncall_web_help"
+config:
+  # folder_path: # Leave empty to use default location: data/sources/oncall_web_help/
+  options:
+    file_extensions: [".html", ".htm"]
+    recursive: true  # Search subfolders recursively

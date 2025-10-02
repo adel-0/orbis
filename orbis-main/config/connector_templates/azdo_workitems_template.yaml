@@ -1,0 +1,21 @@
+# PAT Authentication (recommended)
+name: "CHANGE_ME - Work Items"
+source_type: "azdo_workitems"
+config:
+  organization: "hexagon"
+  project: "CHANGE_ME"
+  auth_type: "pat"
+  pat: "${AZDO_PAT}"
+  use_incremental_sync: true
+
+# OAuth2 Authentication (alternative)
+# name: "CHANGE_ME - Work Items"
+# source_type: "azdo_workitems" 
+# config:
+#   organization: "hexagon"
+#   project: "CHANGE_ME"
+#   auth_type: "oauth2"
+#   client_id: "${AZDO_CLIENT_ID}"
+#   client_secret: "${AZDO_CLIENT_SECRET}"
+#   tenant_id: "${AZDO_TENANT_ID}"
+#   use_incremental_sync: true

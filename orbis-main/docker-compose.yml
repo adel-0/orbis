@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${API_PORT}:7887"
+    env_file:
+      - .env
+    volumes:
+      - app_data:/app/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7887/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  poller:
+    build:
+      context: .
+      dockerfile: Dockerfile.poller
+    env_file:
+      - .env
+    volumes:
+      - app_data:/app/data
+      - ./poller.py:/app/poller.py:ro
+    restart: unless-stopped
+    depends_on:
+      - api
+    command: ["python", "poller.py"]
+
+volumes:
+  app_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+
+networks:
+  default:
+    name: oncall-network

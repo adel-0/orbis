@@ -1,0 +1,33 @@
+{
+  "name": "gpc-support",
+  "organization": "hexagon-si-gpc",
+  "project": "GPC Support",
+  "auth_type": "pat",
+  "pat": "REDACTED_PAT_GPC_SUPPORT",
+  "query_ids": [
+    "77e3275a-5153-4ba4-b3f1-13c0ab5d4d5b"
+  ],
+  "enabled": true
+},
+{
+  "name": "hxgn-si-zur",
+  "organization": "hxgn-si-zur",
+  "project": "HxGN OnCall",
+  "auth_type": "oauth2",
+  "client_id": "33ddc298-e780-41ea-85b5-451f6aa10cd9",
+  "client_secret": "REDACTED_CLIENT_SECRET",
+  "tenant_id": "1b16ab3e-b8f6-4fe3-9f3e-2db7fe549f6a",
+  "query_ids": [
+    "92eaa9af-d347-4400-a8f5-9392022d08c2"
+  ],
+  "enabled": true
+},
+{
+  "name": "hxgn-si-zur-wiki",
+  "organization": "HxGN-SI-ZUR",
+  "project": "HxGN OnCall",
+  "data_source_type": "project_wiki",
+  "auth_type": "pat",
+  "pat": "REDACTED_PAT_HXGN_WIKI",
+  "enabled": true
+}

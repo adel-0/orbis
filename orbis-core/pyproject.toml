@@ -1,0 +1,31 @@
+[project]
+name = "orbis-core"
+version = "0.1.0"
+description = "Shared infrastructure for Orbis applications"
+readme = "README.md"
+requires-python = ">=3.13"
+license = {text = "MIT"}
+
+dependencies = [
+    "aiohttp>=3.9.0",
+    "sqlalchemy>=2.0.0",
+    "cryptography>=43.0.0",
+    "msal>=1.20.0",
+    "openai>=1.98.0,<2.0.0",
+    "tiktoken>=0.8.0",
+    "sentence-transformers>=5.1.0",
+    "torch",
+    "bm25s>=0.2.14",
+    "xxhash>=3.0.0",
+]
+
+[tool.uv]
+index-url = "https://pypi.org/simple/"
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu129" }
+
+[[tool.uv.index]]
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
+explicit = true

@@ -1,0 +1,13 @@
+*.json
+.env
+.venv
+chroma_db
+__pycache__
+*.state
+database
+tmp_test/
+.coverage
+coverage.xml
+uv.lock
+logs/
+data/sources/
