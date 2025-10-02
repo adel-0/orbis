@@ -40,7 +40,9 @@ env/
 
 # Data directories
 data/
+data/sources/
 *.log
+logs/
 
 # Environment files
 .env
@@ -53,9 +55,11 @@ Thumbs.db
 # Temporary files
 .temp/
 tmp/
+tmp_test/
 
 # Test coverage
 .coverage
+coverage.xml
 htmlcov/
 .pytest_cache/
 
@@ -67,6 +71,11 @@ dmypy.json
 # Ruff
 .ruff_cache/
 
-# Old directories with locked files
-orbis/
-.temp/
+# Project-specific
+*.json
+*.jsonl
+*.state
+*.npy
+chroma_db/
+database/
+uv.lock
