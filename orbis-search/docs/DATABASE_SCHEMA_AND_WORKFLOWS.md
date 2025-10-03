@@ -92,33 +92,44 @@ class WorkItemModel(Base):
 
 ### Entity Relationship Diagram
 
-```
-┌─────────────────────┐         ┌─────────────────────┐
-│    DataSource       │ 1     * │      WorkItem       │
-│                     │◄────────│                     │
-│ id (PK)             │         │ id (PK)             │
-│ name                │         │ data_source_id (FK) │
-│ organization        │         │ title               │
-│ project             │         │ description         │
-│ personal_access_token│        │ work_item_type      │
-│ enabled             │         │ state               │
-│ embedding_field_config│       │ additional_fields   │
-│ last_sync           │         │ ...                 │
-└─────────────────────┘         └─────────────────────┘
-         │                               │
-         │                               │
-         ▼                               ▼
-┌─────────────────────┐         ┌─────────────────────┐
-│   ChromaDB          │         │   Vector Embeddings │
-│                     │         │                     │
-│ Collection:         │         │ Metadata:           │
-│ "tickets"           │◄────────│ - source_name       │
-│                     │         │ - organization      │
-│ Vector Storage:     │         │ - project           │
-│ - Embeddings        │         │ - area_path         │
-│ - Metadata          │         │ - iteration_path    │
-│ - Text Documents    │         │ - concatenated_text │
-└─────────────────────┘         └─────────────────────┘
+```mermaid
+erDiagram
+    DataSource ||--o{ WorkItem : "has many"
+    WorkItem ||--|| VectorEmbedding : "has one"
+    VectorEmbedding }o--|| ChromaDB : "stored in"
+
+    DataSource {
+        int id PK
+        string name
+        string organization
+        string project
+        string personal_access_token
+        boolean enabled
+        json embedding_field_config
+        datetime last_sync
+    }
+
+    WorkItem {
+        string id PK
+        int data_source_id FK
+        string title
+        string description
+        string work_item_type
+        string state
+        json additional_fields
+    }
+
+    VectorEmbedding {
+        string id
+        vector embedding_vector
+        json metadata
+        string concatenated_text
+    }
+
+    ChromaDB {
+        string collection_name
+        string storage_type
+    }
 ```
 
 ### Relationship Details
@@ -137,17 +148,15 @@ class WorkItemModel(Base):
 
 ### 1. Data Source Registration Workflow
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   User Creates  │───▶│  Encrypt & Store │───▶│  Test Connection│
-│   Data Source   │    │   Credentials    │    │   & Validate    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │                       │
-                                ▼                       ▼
-                      ┌──────────────────┐    ┌─────────────────┐
-                      │  Set enabled=true│    │   Store in DB   │
-                      │  if successful   │◄───│   as DataSource │
-                      └──────────────────┘    └─────────────────┘
+```mermaid
+graph LR
+    A[User Creates<br/>Data Source] --> B[Encrypt & Store<br/>Credentials]
+    B --> C[Test Connection<br/>& Validate]
+    C --> D[Store in DB<br/>as DataSource]
+    D --> E[Set enabled=true<br/>if successful]
+
+    style A fill:#e3f2fd
+    style E fill:#c8e6c9
 ```
 
 **Steps**:
@@ -159,17 +168,16 @@ class WorkItemModel(Base):
 
 ### 2. Work Item Ingestion Workflow
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Scheduler      │───▶│  Azure DevOps    │───▶│  Parse & Store  │
-│  Triggers Sync  │    │  API Call        │    │  Work Items     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Check Last     │    │  Process Delta   │    │  Update/Insert  │
-│  Sync Time      │◄───│  Changes Only    │◄───│  Database       │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+```mermaid
+graph TD
+    A[Scheduler<br/>Triggers Sync] --> B[Check Last<br/>Sync Time]
+    B --> C[Azure DevOps<br/>API Call]
+    C --> D[Process Delta<br/>Changes Only]
+    D --> E[Parse & Store<br/>Work Items]
+    E --> F[Update/Insert<br/>Database]
+
+    style A fill:#fff3e0
+    style F fill:#c8e6c9
 ```
 
 **Steps**:
@@ -184,17 +192,16 @@ class WorkItemModel(Base):
 
 ### 3. Embedding Generation Workflow
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  User Triggers  │───▶│  Load Work Items │───▶│  Get Embedding  │
-│  /embed         │    │  from Database   │    │  Configurations │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Store in       │◄───│  Generate        │◄───│  Concatenate    │
-│  ChromaDB       │    │  Embeddings      │    │  Text Fields    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+```mermaid
+graph LR
+    A[User Triggers<br/>/embed] --> B[Load Work Items<br/>from Database]
+    B --> C[Get Embedding<br/>Configurations]
+    C --> D[Concatenate<br/>Text Fields]
+    D --> E[Generate<br/>Embeddings]
+    E --> F[Store in<br/>ChromaDB]
+
+    style A fill:#e3f2fd
+    style F fill:#f3e5f5
 ```
 
 **Steps**:
@@ -210,17 +217,16 @@ class WorkItemModel(Base):
 
 ### 4. Search Workflow
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  User Query +   │───▶│  Build Filter    │───▶│  Generate Query │
-│  Filters        │    │  Criteria        │    │  Embedding      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Return Final   │◄───│  Rerank Results  │◄───│  Search ChromaDB│
-│  Results        │    │  (Top-K)         │    │  with Filters   │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+```mermaid
+graph LR
+    A[User Query +<br/>Filters] --> B[Build Filter<br/>Criteria]
+    B --> C[Generate Query<br/>Embedding]
+    C --> D[Search ChromaDB<br/>with Filters]
+    D --> E[Rerank Results<br/>Top-K]
+    E --> F[Return Final<br/>Results]
+
+    style A fill:#e3f2fd
+    style F fill:#c8e6c9
 ```
 
 **Steps**:
@@ -234,17 +240,16 @@ class WorkItemModel(Base):
 
 ### 5. Field Discovery Workflow
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  User Requests  │───▶│  Sample Work     │───▶│  Analyze Field  │
-│  Field Analysis │    │  Items (N=100)   │    │  Types & Values │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Return Config  │◄───│  Apply Selection │◄───│  Suggest Fields │
-│  Template       │    │  Criteria        │    │  for Embedding  │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+```mermaid
+graph LR
+    A[User Requests<br/>Field Analysis] --> B[Sample Work<br/>Items N=100]
+    B --> C[Analyze Field<br/>Types & Values]
+    C --> D[Suggest Fields<br/>for Embedding]
+    D --> E[Apply Selection<br/>Criteria]
+    E --> F[Return Config<br/>Template]
+
+    style A fill:#e3f2fd
+    style F fill:#c8e6c9
 ```
 
 **Steps**:
@@ -265,113 +270,75 @@ class WorkItemModel(Base):
 
 ### Complete System Data Flow
 
-```
-Azure DevOps ──┐
-               │
-               ▼
-         ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-         │ Data         │────▶│ SQLite      │◄────│ Web API      │
-         │ Ingestion    │     │ Database    │     │ Endpoints    │
-         │ Service      │     │             │     │              │
-         └──────────────┘     └─────────────┘     └──────────────┘
-               │                     │                    ▲
-               ▼                     ▼                    │
-         ┌──────────────┐     ┌─────────────┐            │
-         │ Field        │     │ Work Items  │            │
-         │ Discovery    │     │ + Metadata  │            │
-         │ Service      │     │             │            │
-         └──────────────┘     └─────────────┘            │
-               │                     │                    │
-               ▼                     ▼                    │
-         ┌──────────────┐     ┌─────────────┐            │
-         │ Embedding    │────▶│ ChromaDB    │            │
-         │ Service      │     │ Vectors +   │            │
-         │              │     │ Metadata    │            │
-         └──────────────┘     └─────────────┘            │
-                                     │                    │
-                                     ▼                    │
-                              ┌─────────────┐            │
-                              │ Vector      │────────────┘
-                              │ Search +    │
-                              │ Reranking   │
-                              └─────────────┘
+```mermaid
+graph TD
+    ADO[Azure DevOps] --> DIS[Data Ingestion<br/>Service]
+
+    DIS --> DB[(SQLite<br/>Database)]
+    API[Web API<br/>Endpoints] --> DB
+
+    DIS --> FDS[Field Discovery<br/>Service]
+    DB --> WI[Work Items<br/>+ Metadata]
+
+    FDS --> ES[Embedding<br/>Service]
+    WI --> ES
+
+    ES --> CHROMA[(ChromaDB<br/>Vectors + Metadata)]
+
+    CHROMA --> VS[Vector Search<br/>+ Reranking]
+    VS --> API
+
+    style ADO fill:#fff3e0
+    style DB fill:#e8f5e8
+    style CHROMA fill:#f3e5f5
+    style API fill:#e3f2fd
 ```
 
 ### Embedding Data Flow
 
-```
-Work Item Data:
-┌─────────────────┐
-│ Title          │ ◄──── Always Included
-│ Description    │ ◄──── Always Included  
-│ Comments       │ ◄──── Always Included
-│ Tags           │ ◄──── If Configured
-│ AcceptCriteria │ ◄──── If Configured
-│ Custom Fields  │ ◄──── If Configured
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Text            │
-│ Concatenation   │ ──── "Title Description Comment1 Comment2 Tags..."
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Embedding       │ ──── [0.1, 0.2, 0.3, ..., 0.n] (vector)
-│ Generation      │
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│ ChromaDB        │
-│ Storage:        │
-│ • Vector        │ ──── Embedding vector for similarity search
-│ • Metadata      │ ──── Filterable fields (source, org, project, etc.)
-│ • Document      │ ──── Original concatenated text
-└─────────────────┘
+```mermaid
+graph TD
+    WI[Work Item Data] --> ALWAYS[Always Included:<br/>Title, Description, Comments]
+    WI --> CONFIG[If Configured:<br/>Tags, AcceptCriteria,<br/>Custom Fields]
+
+    ALWAYS --> CONCAT[Text Concatenation:<br/>Title Description Comment1 Comment2 Tags...]
+    CONFIG --> CONCAT
+
+    CONCAT --> EMBED[Embedding Generation:<br/>Vector: 0.1, 0.2, 0.3, ..., 0.n]
+
+    EMBED --> STORE[ChromaDB Storage]
+
+    STORE --> VEC[Vector:<br/>Embedding vector for<br/>similarity search]
+    STORE --> META[Metadata:<br/>Filterable fields<br/>source, org, project, etc]
+    STORE --> DOC[Document:<br/>Original concatenated text]
+
+    style WI fill:#e3f2fd
+    style CONCAT fill:#fff3e0
+    style EMBED fill:#fce4ec
+    style STORE fill:#f3e5f5
 ```
 
 ### Search Data Flow
 
-```
-User Query: "authentication issues"
-         │
-         ▼
-┌─────────────────┐
-│ Query           │ ──── [0.2, 0.1, 0.4, ..., 0.m] (vector)
-│ Embedding       │
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│ Filters         │ ────│ WHERE Clause:   │
-│ source_names:   │     │ source_name IN  │
-│ ["ProjectA"]    │     │ ["ProjectA"]    │
-│ area_path:      │     │ AND area_path   │
-│ "Backend"       │     │ REGEX "^Backend"│
-└─────────────────┘     └─────────────────┘
-         │                       │
-         ▼                       │
-┌─────────────────┐             │
-│ ChromaDB        │◄────────────┘
-│ Vector Search   │
-│ • Cosine Similarity
-│ • Apply Filters 
-│ • Return 10x Candidates
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Reranking       │ ──── Improve relevance using query context
-│ Service         │
-└─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Final Results   │ ──── Top-K most relevant work items
-│ + Scores        │
-└─────────────────┘
+```mermaid
+graph TD
+    QUERY[User Query:<br/>authentication issues] --> EMBED[Query Embedding:<br/>Vector: 0.2, 0.1, 0.4, ..., 0.m]
+
+    QUERY --> FILTERS[Filters:<br/>source_names: ProjectA<br/>area_path: Backend]
+    FILTERS --> WHERE[WHERE Clause:<br/>source_name IN ProjectA<br/>AND area_path REGEX ^Backend]
+
+    EMBED --> CHROMA[ChromaDB Vector Search]
+    WHERE --> CHROMA
+
+    CHROMA --> CANDIDATES[Search Results:<br/>• Cosine Similarity<br/>• Apply Filters<br/>• Return 10x Candidates]
+
+    CANDIDATES --> RERANK[Reranking Service:<br/>Improve relevance using<br/>query context]
+
+    RERANK --> RESULTS[Final Results + Scores:<br/>Top-K most relevant<br/>work items]
+
+    style QUERY fill:#e3f2fd
+    style CHROMA fill:#f3e5f5
+    style RESULTS fill:#c8e6c9
 ```
 
 ---

@@ -1,6 +1,6 @@
 # Search and Filtering Architecture
 
-This document explains how the OnCall Copilot search and filtering system works, including the complete data flow from work item ingestion to search results.
+This document explains how the Orbis Search system works, including the complete data flow from work item ingestion to search results.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ This document explains how the OnCall Copilot search and filtering system works,
 
 ## System Overview
 
-The OnCall Copilot implements a **two-tier search architecture**:
+Orbis Search implements a **two-tier search architecture**:
 
 1. **Metadata Filtering**: Fast pre-filtering using structured data
 2. **Semantic Search**: AI-powered similarity search on embedded content
@@ -343,6 +343,6 @@ The field discovery service suggests fields based on:
 ---
 
 For more specific implementation details, see:
-- [Dynamic Fields Implementation](../DYNAMIC_FIELDS_IMPLEMENTATION.md)
-- [Service Documentation](./SERVICES.md)
-- [API Reference](./API_REFERENCE.md)
+- [Embedding Configuration Guide](./EMBEDDING_CONFIGURATION_GUIDE.md)
+- [Database Schema and Workflows](./DATABASE_SCHEMA_AND_WORKFLOWS.md)
+- [Architecture Diagrams](./ARCHITECTURE_DIAGRAMS.md)

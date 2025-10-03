@@ -401,5 +401,5 @@ Monitor these metrics after configuration changes:
 
 For implementation details, see:
 - [Search and Filtering Architecture](./SEARCH_AND_FILTERING_ARCHITECTURE.md)
-- [Dynamic Fields Implementation](../DYNAMIC_FIELDS_IMPLEMENTATION.md)
-- [API Reference](./API_REFERENCE.md)
+- [Database Schema and Workflows](./DATABASE_SCHEMA_AND_WORKFLOWS.md)
+- [Architecture Diagrams](./ARCHITECTURE_DIAGRAMS.md)

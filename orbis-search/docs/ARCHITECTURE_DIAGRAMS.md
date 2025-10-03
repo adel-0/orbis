@@ -1,6 +1,6 @@
 # Architecture Diagrams
 
-This document contains visual diagrams to help understand the OnCall Copilot system architecture, data flows, and component relationships.
+This document contains visual diagrams to help understand the Orbis Search system architecture, data flows, and component relationships.
 
 ## Table of Contents
 
@@ -315,7 +315,7 @@ graph LR
 
 ---
 
-These diagrams provide visual representations of the key architectural concepts and workflows in the OnCall Copilot system. For detailed implementation information, refer to:
+These diagrams provide visual representations of the key architectural concepts and workflows in the Orbis Search system. For detailed implementation information, refer to:
 
 - [Search and Filtering Architecture](./SEARCH_AND_FILTERING_ARCHITECTURE.md)
 - [Embedding Configuration Guide](./EMBEDDING_CONFIGURATION_GUIDE.md)

@@ -67,15 +67,15 @@ sequenceDiagram
   autonumber
   participant User as Azure DevOps User
   participant ADO as Azure DevOps Work Item
-  participant Orc as AgenticRAGOrchestrator ✅
-  participant PD as ProjectDetectionService ✅
-  participant SA as ScopeAnalyzer ✅
-  participant GMMS as GenericMultiModalSearch ✅
-  participant GVS as GenericVectorService ✅
-  participant CCR as CrossCollectionRerankService ✅
-  participant ES as EmbeddingService ✅
-  participant RS as RerankService ✅
-  participant DA as DocumentationAggregator ✅
+  participant Orc as AgenticRAGOrchestrator
+  participant PD as ProjectDetectionService
+  participant SA as ScopeAnalyzer
+  participant GMMS as GenericMultiModalSearch
+  participant GVS as GenericVectorService
+  participant CCR as CrossCollectionRerankService
+  participant ES as EmbeddingService
+  participant RS as RerankService
+  participant DA as DocumentationAggregator
   participant ADOResp as Azure DevOps Response
 
   User->>ADO: Add "Summon Orbis" tag
