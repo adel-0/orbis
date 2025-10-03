@@ -13,9 +13,8 @@ import markdown
 from bs4 import BeautifulSoup
 
 from orbis_core.connectors.azure_devops import AzureDevOpsAuthMixin
+from orbis_core.connectors.azure_devops.constants import API_VERSIONS
 from orbis_core.utils.constants import DEFAULT_RATE_LIMIT_DELAY
-
-from .constants import API_VERSIONS
 
 logger = logging.getLogger(__name__)
 

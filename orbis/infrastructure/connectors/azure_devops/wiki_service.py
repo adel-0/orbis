@@ -31,7 +31,7 @@ class WikiService:
                 logger.info("Wiki incremental sync requested, but performing full sync (wiki API limitation)")
             else:
                 logger.info("Performing full wiki sync")
-            from orbis_core.connectors.azure_devops import (
+            from infrastructure.connectors.azure_devops.azure_devops_wiki_client import (
                 AzureDevOpsWikiClient,
             )
 

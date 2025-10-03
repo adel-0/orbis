@@ -15,7 +15,7 @@ from app.db.session import get_db_session
 from core.schemas import Ticket
 from core.services.generic_content_service import GenericContentService
 
-from .constants import DEFAULT_DB_BATCH_SIZE
+from orbis_core.connectors.azure_devops.constants import DEFAULT_DB_BATCH_SIZE
 
 logger = logging.getLogger(__name__)
 
