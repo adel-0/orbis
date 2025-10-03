@@ -45,8 +45,8 @@ class Settings:
     HF_HOME: str = get_env("HF_HOME", "data/models/huggingface")
 
     # Vector database settings
-    CHROMA_COLLECTION_NAME: str = get_env("CHROMA_COLLECTION_NAME", "documents")
-    CHROMA_DB_PATH: str = get_env("CHROMA_DB_PATH", "data/chroma_db")
+    CHROMA_COLLECTION_NAME: str = get_env("CHROMA_COLLECTION_NAME", "items")
+    CHROMA_DB_PATH: str = get_env("CHROMA_DB_PATH", "data/chroma_db/orbis")
 
     # Data ingestion settings
     USE_INCREMENTAL_SYNC: bool = get_env("USE_INCREMENTAL_SYNC", True)

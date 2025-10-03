@@ -48,8 +48,8 @@ class Settings:
     RERANK_MAX_CHUNK_SIZE: int = int(os.getenv("RERANK_MAX_CHUNK_SIZE", str(int(os.getenv("EMBEDDING_MAX_CHUNK_SIZE", "512")))))
     
     # Vector database settings
-    CHROMA_COLLECTION_NAME: str = os.getenv("CHROMA_COLLECTION_NAME", "workitems")
-    CHROMA_DB_PATH: str = os.getenv("CHROMA_DB_PATH", "data/chroma_db")
+    CHROMA_COLLECTION_NAME: str = os.getenv("CHROMA_COLLECTION_NAME", "items")
+    CHROMA_DB_PATH: str = os.getenv("CHROMA_DB_PATH", "data/chroma_db/orbis-search")
     
     # Data ingestion settings
     USE_INCREMENTAL_SYNC: bool = os.getenv("USE_INCREMENTAL_SYNC", "true").lower() == "true"

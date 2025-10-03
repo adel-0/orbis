@@ -59,7 +59,7 @@ class ServiceContainer:
             logger.info("Rerank service initialized with chunking support")
 
             # Initialize BM25 and hybrid search services
-            self.bm25_service = BM25Service()
+            self.bm25_service = BM25Service(persist_dir="data/bm25_index/orbis-search")
             # Try to load existing BM25 index from disk
             if self.bm25_service.load_index():
                 logger.info(f"BM25 service initialized with {self.bm25_service.get_corpus_size()} documents loaded from disk")
