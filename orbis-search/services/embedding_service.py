@@ -4,9 +4,9 @@ from config import settings
 import asyncio
 from models.schemas import Ticket
 from services.vector_service import VectorService
-import time
 
 from orbis_core.embedding import EmbeddingService as CoreEmbeddingService
+from orbis_core.utils.progress_tracker import ProgressTracker
 
 logger = logging.getLogger(__name__)
 
@@ -83,13 +83,12 @@ class EmbeddingService:
         vs = vector_service or self.vector_service
 
         all_embeddings: List[List[float]] = []
-        processed = 0
-        start_time = time.time()
         num_batches = (total + bs - 1) // bs
         logger.info(
             f"Embedding {total} tickets in {num_batches} batches (batch_size={bs})"
         )
-        last_percent_logged = -1
+
+        progress = ProgressTracker(total, operation_name="Embedding tickets")
 
         try:
             for i in range(0, total, bs):
@@ -102,14 +101,13 @@ class EmbeddingService:
                         parts.append(t.description)
                     if t.comments:
                         parts.extend(t.comments)
-                    
+
                     batch_texts.append(" ".join(parts))
 
                 # Generate embeddings for the batch off the event loop
                 batch_embeddings = await asyncio.to_thread(
                     self.encode_texts, batch_texts, batch_size=bs
                 )
-                processed += len(batch_embeddings)
 
                 if vs is not None:
                     # Store immediately per batch off the event loop
@@ -126,34 +124,23 @@ class EmbeddingService:
                 # Clear CUDA cache to free memory if applicable
                 self.clear_cache()
 
-                # Aggregated progress logging every 10% or on completion
-                percent = int((processed * 100) / total)
-                if percent >= last_percent_logged + 10 or processed == total:
-                    elapsed = time.time() - start_time
-                    rate = (processed / elapsed) if elapsed > 0 else 0.0
-                    remaining = total - processed
-                    eta_seconds = (remaining / rate) if rate > 0 else 0.0
-                    eta_min = int(eta_seconds // 60)
-                    eta_sec = int(eta_seconds % 60)
-                    logger.info(
-                        f"Progress: {processed}/{total} ({percent}%) - elapsed {elapsed:.1f}s, ETA {eta_min:02d}:{eta_sec:02d}"
-                    )
-                    last_percent_logged = percent
+                # Update progress with ETA logging
+                progress.update(len(batch_embeddings))
 
-            elapsed_total = time.time() - start_time
+            elapsed_total = progress.get_elapsed_time()
             if vs is not None:
                 return {
-                    "message": f"Successfully embedded and stored {processed} tickets in {elapsed_total:.1f}s",
+                    "message": f"Successfully embedded and stored {progress.processed} tickets in {elapsed_total:.1f}s",
                     "total_tickets": total,
-                    "processed_tickets": processed,
+                    "processed_tickets": progress.processed,
                     "stored": True,
                     "success": True,
                 }
             else:
                 return {
-                    "message": f"Successfully embedded {processed} tickets (not stored) in {elapsed_total:.1f}s",
+                    "message": f"Successfully embedded {progress.processed} tickets (not stored) in {elapsed_total:.1f}s",
                     "total_tickets": total,
-                    "processed_tickets": processed,
+                    "processed_tickets": progress.processed,
                     "stored": False,
                     "embeddings": all_embeddings,
                     "success": True,

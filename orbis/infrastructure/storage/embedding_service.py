@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 from typing import Any
 
 from sqlalchemy import and_, func
@@ -10,6 +9,7 @@ from config.settings import settings
 from core.schemas import BaseContent
 from infrastructure.storage.generic_vector_service import GenericVectorService
 from orbis_core.embedding import EmbeddingService as CoreEmbeddingService
+from orbis_core.utils.progress_tracker import ProgressTracker
 
 logger = logging.getLogger(__name__)
 
@@ -121,13 +121,12 @@ class EmbeddingService:
         vs = vector_service or self.vector_service
 
         all_embeddings: list[list[float]] = []
-        processed = 0
-        start_time = time.time()
         num_batches = (total + bs - 1) // bs
         logger.info(
             f"Embedding {total} content items in {num_batches} batches (batch_size={bs})"
         )
-        last_percent_logged = -1
+
+        progress = ProgressTracker(total, operation_name="Embedding content")
 
         try:
             for i in range(0, total, bs):
@@ -170,7 +169,6 @@ class EmbeddingService:
                 batch_embeddings = await asyncio.to_thread(
                     self.encode_texts, batch_texts, batch_size=bs
                 )
-                processed += len(batch_embeddings)
 
                 if vs is not None:
                     # Store immediately per batch off the event loop
@@ -187,34 +185,23 @@ class EmbeddingService:
                 # Clear CUDA cache to free memory if applicable
                 self.clear_cache()
 
-                # Aggregated progress logging every 10% or on completion
-                percent = int((processed * 100) / total)
-                if percent >= last_percent_logged + 10 or processed == total:
-                    elapsed = time.time() - start_time
-                    rate = (processed / elapsed) if elapsed > 0 else 0.0
-                    remaining = total - processed
-                    eta_seconds = (remaining / rate) if rate > 0 else 0.0
-                    eta_min = int(eta_seconds // 60)
-                    eta_sec = int(eta_seconds % 60)
-                    logger.info(
-                        f"Progress: {processed}/{total} ({percent}%) - elapsed {elapsed:.1f}s, ETA {eta_min:02d}:{eta_sec:02d}"
-                    )
-                    last_percent_logged = percent
+                # Update progress with ETA logging
+                progress.update(len(batch_embeddings))
 
-            elapsed_total = time.time() - start_time
+            elapsed_total = progress.get_elapsed_time()
             if vs is not None:
                 return {
-                    "message": f"Successfully embedded and stored {processed} content items in {elapsed_total:.1f}s",
+                    "message": f"Successfully embedded and stored {progress.processed} content items in {elapsed_total:.1f}s",
                     "total_items": total,
-                    "processed_items": processed,
+                    "processed_items": progress.processed,
                     "stored": True,
                     "success": True,
                 }
             else:
                 return {
-                    "message": f"Successfully embedded {processed} content items (not stored) in {elapsed_total:.1f}s",
+                    "message": f"Successfully embedded {progress.processed} content items (not stored) in {elapsed_total:.1f}s",
                     "total_items": total,
-                    "processed_items": processed,
+                    "processed_items": progress.processed,
                     "stored": False,
                     "embeddings": all_embeddings,
                     "success": True,

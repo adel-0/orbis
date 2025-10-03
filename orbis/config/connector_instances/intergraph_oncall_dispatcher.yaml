@@ -1,7 +1,7 @@
 # IntergraphOnCallDispatcher Web Help Instance
 name: "IntergraphOnCallDispatcher"
 source_type: "oncall_web_help"
-enabled: true
+enabled: false
 weight: 1.0
 config:
   folder_path: "data/sources/oncall_web_help/IntergraphOnCallDispatcher"
