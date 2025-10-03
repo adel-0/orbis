@@ -1,5 +1,5 @@
 """
-Agentic RAG Orchestrator for OnCall Copilot
+Agentic RAG Orchestrator for Orbis
 
 Main workflow orchestrator that coordinates the agentic RAG system:
 1. Project detection (non-LLM)
@@ -12,6 +12,7 @@ Main workflow orchestrator that coordinates the agentic RAG system:
 import logging
 import time
 
+from config.settings import settings
 from core.agents.documentation_aggregator import DocumentationAggregator
 from core.agents.llm_routing_agent import QueryRoutingAgent
 from core.agents.scope_analyzer import ScopeAnalyzer
@@ -24,7 +25,7 @@ from core.schemas import (
 )
 from core.services.generic_multi_modal_search import GenericMultiModalSearch
 from core.services.project_detection import ProjectDetectionService
-from infrastructure.llm.openai_client import OpenAIClientService
+from orbis_core.llm.openai_client import OpenAIClientService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 from infrastructure.storage.rerank_service import RerankService
@@ -49,7 +50,12 @@ class AgenticRAGOrchestrator:
                  rerank_service: RerankService | None = None,
                  openai_client_service: OpenAIClientService | None = None):
         # Initialize shared OpenAI client
-        openai_client = openai_client_service or OpenAIClientService()
+        openai_client = openai_client_service or OpenAIClientService(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+        )
 
         # Initialize all services with dependency injection support (now using generic services)
         self.project_detection = ProjectDetectionService()
@@ -127,7 +133,7 @@ class AgenticRAGOrchestrator:
                 if project_context:
                     logger.info(f"✅ Project detected: {project_context.project_code}")
                 else:
-                    logger.info("🔍 No specific project detected, using general OnCall context")
+                    logger.info("🔍 No specific project detected, using general context")
 
             # Step 2: Content Scope Analysis
             logger.info("🧠 Step 2: Content scope and intent analysis")
@@ -369,7 +375,7 @@ Please contact technical support for assistance with this issue."""
             return fallback_summary, [], 0.2
 
     def _create_default_project_context(self) -> ProjectContext:
-        """Create a default project context for general OnCall issues"""
+        """Create a default project context for general issues"""
         return ProjectContext(
             project_code=None
         )

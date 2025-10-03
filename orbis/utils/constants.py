@@ -1,5 +1,5 @@
 """
-Shared constants for OnCall Copilot.
+Shared constants for Orbis.
 Centralizes commonly used configuration values.
 """
 

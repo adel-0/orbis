@@ -1,5 +1,5 @@
 """
-Summary Agent for OnCall Copilot
+Summary Agent for Orbis
 
 Generates intelligent summaries of search results and ticket collections using LLM analysis.
 This agent autonomously synthesizes multiple tickets into coherent, actionable summaries.
@@ -12,7 +12,7 @@ from pathlib import Path
 
 from config.settings import settings
 from core.schemas import BaseContent
-from infrastructure.llm.openai_client import OpenAIClientService
+from orbis_core.llm.openai_client import OpenAIClientService
 from utils.prompt_loader import PromptLoader
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,12 @@ class SearchResultsSummarizer:
 
     def __init__(self, openai_client_service: OpenAIClientService | None = None):
         # Use shared OpenAI client
-        self.openai_client_service = openai_client_service or OpenAIClientService()
+        self.openai_client_service = openai_client_service or OpenAIClientService(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+        )
         # Initialize prompt loader
         self.prompt_loader = PromptLoader()
         # Configuration

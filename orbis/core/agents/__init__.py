@@ -1,5 +1,5 @@
 """
-Agentic RAG agents for OnCall Copilot.
+Agentic RAG agents for Orbis.
 
 This module contains all the intelligent agents that make autonomous decisions
 and actively process content using LLMs.

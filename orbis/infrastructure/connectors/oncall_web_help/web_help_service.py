@@ -309,11 +309,11 @@ class OnCallWebHelpService:
         
         Args:
             html_content: Raw HTML content
-            
+
         Returns:
             Tuple of (title, text_content, html_modified_date)
         """
-        from utils.constants import clean_html_content
+        from orbis_core.utils.constants import clean_html_content
         import re
         
         # Extract title using regex - check h3 first (OnCall format), then title, then h1

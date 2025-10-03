@@ -1,5 +1,5 @@
 """
-Wiki Summarization Service for OnCall Copilot
+Wiki Summarization Service for Orbis
 
 Provides high-level summaries of project wikis for contextual analysis,
 handling very large wiki content (hundreds of thousands of tokens).
@@ -15,7 +15,7 @@ from app.db.models import WikiSummaryCache
 from app.db.session import get_db_session
 from config.settings import settings
 from core.schemas import WikiSummary
-from infrastructure.llm.openai_client import OpenAIClientService
+from orbis_core.llm.openai_client import OpenAIClientService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 from utils.constants import (
@@ -24,7 +24,7 @@ from utils.constants import (
     WIKI_CACHE_STARTUP_TIMEOUT_MINUTES,
 )
 from utils.prompt_loader import PromptLoader
-from utils.token_utils import count_tokens
+from orbis_core.utils.token_utils import count_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,12 @@ class WikiSummarizationService:
 
     def __init__(self, vector_service: GenericVectorService | None = None, embedding_service: EmbeddingService | None = None, openai_client_service: OpenAIClientService | None = None):
         # Use dependency injection for services
-        self.openai_client_service = openai_client_service or OpenAIClientService()
+        self.openai_client_service = openai_client_service or OpenAIClientService(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+        )
         self.vector_service = vector_service
         self.embedding_service = embedding_service
 

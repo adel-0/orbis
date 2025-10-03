@@ -1,5 +1,5 @@
 """
-SQLAlchemy models for OnCall Copilot database.
+SQLAlchemy models for Orbis database.
 """
 
 

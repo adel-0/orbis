@@ -12,8 +12,8 @@ import aiohttp
 import markdown
 from bs4 import BeautifulSoup
 
-from infrastructure.connectors.azure_devops.auth import AzureDevOpsAuthMixin
-from utils.constants import DEFAULT_RATE_LIMIT_DELAY
+from orbis_core.connectors.azure_devops import AzureDevOpsAuthMixin
+from orbis_core.utils.constants import DEFAULT_RATE_LIMIT_DELAY
 
 from .constants import API_VERSIONS
 

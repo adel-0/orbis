@@ -1,3 +1,3 @@
 """
-Data storage and retrieval services for OnCall Copilot.
+Data storage and retrieval services for Orbis.
 """

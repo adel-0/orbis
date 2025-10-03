@@ -1,5 +1,5 @@
 """
-Application setup utilities for OnCall Copilot.
+Application setup utilities for Orbis.
 Provides functions to configure CORS and register routers.
 """
 
@@ -7,7 +7,7 @@ Provides functions to configure CORS and register routers.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from utils.logging import get_logger
+from orbis_core.utils.logging import get_logger
 
 logger = get_logger()
 

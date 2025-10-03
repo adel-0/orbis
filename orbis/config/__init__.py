@@ -1,3 +1,3 @@
 """
-Configuration management for OnCall Copilot.
+Configuration management for Orbis.
 """

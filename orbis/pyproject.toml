@@ -1,10 +1,11 @@
 [project]
-name = "oncall-copilot"
+name = "orbis"
 version = "0.1.0"
-description = "High-performance semantic search system for Azure DevOps tickets using advanced embedding models and vector database technology"
+description = "Advanced agentic RAG system for Azure DevOps tickets with multi-agent workflows and contextual analysis"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "orbis-core",
     "fastapi==0.116.1",
     "uvicorn[standard]==0.35.0",
     "chromadb==1.0.20",
@@ -12,18 +13,10 @@ dependencies = [
     "pydantic==2.11.7",
     "python-multipart>=0.0.20",
     "python-dotenv>=1.0.0",
-    "aiohttp>=3.9.0",
-    "msal>=1.20.0",
-    "sqlalchemy>=2.0.0",
-    "alembic>=1.13.0",
-    "cryptography>=43.0.0",
-    "hf_xet>=1.1.8",
     "markdown",
     "bs4",
     "pillow>=11.3.0",
     "pyyaml>=6.0.0",
-    "tiktoken>=0.8.0",
-    "xxhash>=3.0.0"
 ]
 [project.optional-dependencies]
 local = [
@@ -42,6 +35,7 @@ dev = [
 index-url = "https://pypi.org/simple/"
 
 [tool.uv.sources]
+orbis-core = { workspace = true }
 torch = { index = "pytorch-cu129" }
 
 [[tool.uv.index]]

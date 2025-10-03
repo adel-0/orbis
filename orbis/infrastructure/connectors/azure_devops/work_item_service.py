@@ -236,7 +236,7 @@ class WorkItemService:
         try:
             import aiohttp
 
-            from infrastructure.connectors.azure_devops.azure_devops_client import (
+            from orbis_core.connectors.azure_devops import (
                 AzureDevOpsClient,
             )
 

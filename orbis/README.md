@@ -1,4 +1,4 @@
-# OnCall Copilot
+# Orbis
 
 An agentic RAG system that provides intelligent analysis of Azure DevOps tickets using advanced semantic search and AI-powered summarization. Built with FastAPI, ChromaDB, and Azure OpenAI for enterprise-grade performance.
 
@@ -8,8 +8,8 @@ An agentic RAG system that provides intelligent analysis of Azure DevOps tickets
 
 ```bash
 # Clone repository
-git clone https://github.com/adel-0/oncall-copilot
-cd oncall-copilot
+git clone https://github.com/adel-0/orbis
+cd orbis
 
 # Install dependencies using uv
 uv sync --extra local  # Local development with embedding models
@@ -148,7 +148,7 @@ EMBEDDING_BATCH_SIZE=32
 LOCAL_EMBEDDING_MODEL=google/embeddinggemma-300m
 
 # Database Configuration
-DATABASE_URL=sqlite:///data/database/oncall_copilot.db
+DATABASE_URL=sqlite:///data/database/orbis.db
 
 # Security
 API_KEY_ENABLED=false
@@ -248,7 +248,7 @@ chmod +x docker-setup.sh
 ```bash
 # Clone and prepare repository
 git clone <your-repository-url>
-cd oncall-copilot
+cd orbis
 mkdir -p data/database data/chroma_db
 
 # Environment configuration
@@ -288,10 +288,10 @@ docker-compose down
 docker-compose logs -f api
 
 # Monitor resources
-docker stats oncall-copilot-api-1
+docker stats orbis-api-1
 
 # GPU monitoring (if available)
-docker exec -it oncall-copilot-api-1 nvidia-smi
+docker exec -it orbis-api-1 nvidia-smi
 
 # Backup data
 tar -czf backup-$(date +%Y%m%d).tar.gz data/
@@ -315,7 +315,7 @@ netstat -tulpn | grep :7887
 **Memory Issues:**
 ```bash
 # Check container memory usage
-docker stats oncall-copilot-api-1
+docker stats orbis-api-1
 # Reduce EMBEDDING_BATCH_SIZE in .env
 ```
 

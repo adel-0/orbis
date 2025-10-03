@@ -1,3 +1,3 @@
 """
-Core business services for OnCall Copilot.
+Core business services for Orbis.
 """

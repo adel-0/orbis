@@ -31,7 +31,7 @@ class WikiService:
                 logger.info("Wiki incremental sync requested, but performing full sync (wiki API limitation)")
             else:
                 logger.info("Performing full wiki sync")
-            from infrastructure.connectors.azure_devops.azure_devops_wiki_client import (
+            from orbis_core.connectors.azure_devops import (
                 AzureDevOpsWikiClient,
             )
 
@@ -302,7 +302,7 @@ class WikiService:
 
     def _extract_text_from_html(self, html_content: str) -> str:
         """Extract plain text from HTML content"""
-        from utils.constants import clean_html_content
+        from orbis_core.utils.constants import clean_html_content
         return clean_html_content(html_content)
 
     def _format_datetime(self, dt) -> str:

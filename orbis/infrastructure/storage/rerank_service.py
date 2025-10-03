@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence
 from typing import Any
 
-from utils.constants import DEFAULT_RERANK_BATCH_SIZE, DEFAULT_RERANK_MODEL
+from orbis_core.utils.constants import DEFAULT_RERANK_BATCH_SIZE, DEFAULT_RERANK_MODEL
 
 try:
     from sentence_transformers import CrossEncoder  # type: ignore

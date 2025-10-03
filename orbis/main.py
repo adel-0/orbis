@@ -1,5 +1,5 @@
 """
-OnCall Copilot API - FastAPI bootstrap with simple dependency management.
+Orbis API - FastAPI bootstrap with simple dependency management.
 """
 
 from contextlib import asynccontextmanager
@@ -18,7 +18,7 @@ from app.db.session import DatabaseManager
 from config.settings import settings
 from core.services.config_loader import ConfigLoader
 from utils.app_setup import register_routers, setup_cors
-from utils.logging import get_logger, setup_logging
+from orbis_core.utils.logging import get_logger, setup_logging
 
 setup_logging()
 logger = get_logger()
@@ -27,7 +27,7 @@ logger = get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        logger.info("🚀 Starting OnCall Copilot API...")
+        logger.info("🚀 Starting Orbis API...")
         DatabaseManager.init_database()
         logger.info(f"✅ Database: {DatabaseManager.get_database_info()}")
 
@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.API_TITLE,
     version=settings.API_VERSION,
-    description="OnCall Copilot API for semantic search of Azure DevOps tickets with SQLite database",
+    description="Orbis API for semantic search of Azure DevOps tickets with SQLite database",
     lifespan=lifespan,
 )
 

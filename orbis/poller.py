@@ -40,7 +40,7 @@ import aiohttp
 
 from core.agents.summary_agent import SearchResultsSummarizer
 from core.schemas import Ticket
-from infrastructure.connectors.azure_devops.azure_devops_client import AzureDevOpsClient
+from orbis_core.connectors.azure_devops import AzureDevOpsClient
 
 # -----------------------------
 # Configuration (defaults with env overrides)
@@ -62,7 +62,7 @@ DEFAULT_POLL_SECONDS: int = 30
 DEFAULT_TOPK: int = 3
 DEFAULT_STATE_PATH: str = ".ado_related/state.json"
 
-# Use local OnCall Copilot API /search to get related tickets and summary
+# Use local Orbis API /search to get related tickets and summary
 # The poller will call your FastAPI (main.py) at the address below.
 DEFAULT_USE_LOCAL_SEARCH: bool = True
 DEFAULT_API_BASE_URL: str = "http://127.0.0.1:7887"
@@ -370,7 +370,7 @@ async def post_comment(
 async def update_workitem_tags(
     session: aiohttp.ClientSession, *, org: str, project: str, workitem_id: int, current_tags: str
 ) -> None:
-    """Update work item tags by replacing 'Summon OnCall Copilot' with 'OnCall Copilot Summoned'.
+    """Update work item tags by replacing 'Summon Orbis' with 'Orbis Summoned'.
 
     Uses direct field replacement approach. If the operation fails due to tag creation permissions,
     the calling code should handle the exception gracefully.
@@ -392,14 +392,14 @@ async def update_workitem_tags(
         tag_list = [tag.strip() for tag in current_tags.split(";") if tag.strip()]
 
     # Only proceed if we actually need to remove the trigger tag
-    if "Summon OnCall Copilot" not in tag_list:
+    if "Summon Orbis" not in tag_list:
         # Nothing to do - the trigger tag isn't present
         return
 
     # Remove the old tag and add the new tag
-    tag_list.remove("Summon OnCall Copilot")
-    if "OnCall Copilot Summoned" not in tag_list:
-        tag_list.append("OnCall Copilot Summoned")
+    tag_list.remove("Summon Orbis")
+    if "Orbis Summoned" not in tag_list:
+        tag_list.append("Orbis Summoned")
 
     # Convert back to semicolon-separated string
     updated_tags = "; ".join(tag_list) if tag_list else ""
@@ -598,11 +598,11 @@ async def poll_once(state: dict[str, Any]) -> None:
             tags = str(fields.get("System.Tags", ""))
 
             # Check for required tag - process any ticket with this tag
-            if "Summon OnCall Copilot" not in tags:
-                log(f"Skipping WI #{wid}: does not have 'Summon OnCall Copilot' tag")
+            if "Summon Orbis" not in tags:
+                log(f"Skipping WI #{wid}: does not have 'Summon Orbis' tag")
                 continue
 
-            log(f"Processing WI #{wid}: has 'Summon OnCall Copilot' tag")
+            log(f"Processing WI #{wid}: has 'Summon Orbis' tag")
             new_items.append(wi)
 
         if not new_items:
@@ -704,7 +704,7 @@ async def poll_once(state: dict[str, Any]) -> None:
                 log(f"Failed to comment on #{wid}: {e}")
                 continue
 
-            # Update tags: replace "Summon OnCall Copilot" with "OnCall Copilot Summoned"
+            # Update tags: replace "Summon Orbis" with "Orbis Summoned"
             try:
                 await update_workitem_tags(
                     session,

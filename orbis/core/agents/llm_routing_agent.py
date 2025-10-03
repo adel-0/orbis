@@ -1,5 +1,5 @@
 """
-LLM-powered intelligent routing agent for OnCall Copilot.
+LLM-powered intelligent routing agent for Orbis.
 Uses Azure OpenAI to analyze queries and route them to the most relevant data sources.
 This agent autonomously decides which data sources to search based on query analysis.
 """
@@ -44,8 +44,13 @@ class QueryRoutingAgent:
 
     def __init__(self, openai_client_service=None, data_source_service=None):
         # Use shared OpenAI client
-        from infrastructure.llm.openai_client import OpenAIClientService
-        self.openai_client_service = openai_client_service or OpenAIClientService()
+        from orbis_core.llm.openai_client import OpenAIClientService
+        self.openai_client_service = openai_client_service or OpenAIClientService(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+        )
 
         # Use data source service for database access
         from infrastructure.data_processing.data_source_service import DataSourceService

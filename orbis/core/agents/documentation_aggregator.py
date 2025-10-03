@@ -1,5 +1,5 @@
 """
-Documentation Aggregator for OnCall Copilot
+Documentation Aggregator for Orbis
 
 This is the second agent in the agentic RAG system that takes the search results from
 the multi-modal search service and aggregates them into a comprehensive, actionable summary.
@@ -14,7 +14,7 @@ from typing import Any
 from config.settings import settings
 from core.schemas import ScopeAnalysisResult, SourceReference
 from core.services.generic_multi_modal_search import GenericAggregatedSearchResult
-from infrastructure.llm.openai_client import OpenAIClientService
+from orbis_core.llm.openai_client import OpenAIClientService
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,12 @@ class DocumentationAggregator:
 
     def __init__(self, openai_client_service: OpenAIClientService | None = None):
         # Use shared OpenAI client
-        self.openai_client_service = openai_client_service or OpenAIClientService()
+        self.openai_client_service = openai_client_service or OpenAIClientService(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+        )
 
         # Aggregation configuration
         self.config = {
@@ -339,7 +344,7 @@ Focus on being practical and actionable rather than theoretical. If the document
                 messages=[
                     {
                         "role": "developer",
-                        "content": """You are the Documentation Aggregator in an OnCall Dispatch support system. Your role is to synthesize information from multiple sources (tickets, wikis, code, PDFs) into actionable summaries that help resolve technical issues.
+                        "content": """You are the Documentation Aggregator in an Orbis support system. Your role is to synthesize information from multiple sources (tickets, wikis, code, PDFs) into actionable summaries that help resolve technical issues.
 
 You excel at:
 - Identifying the most relevant information across diverse sources

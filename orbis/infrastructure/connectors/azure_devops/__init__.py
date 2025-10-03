@@ -1,3 +1,3 @@
 """
-Azure DevOps connectors for OnCall Copilot.
+Azure DevOps connectors for Orbis.
 """

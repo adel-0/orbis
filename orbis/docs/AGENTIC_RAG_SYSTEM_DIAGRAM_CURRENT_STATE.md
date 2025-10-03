@@ -78,7 +78,7 @@ sequenceDiagram
   participant DA as DocumentationAggregator ✅
   participant ADOResp as Azure DevOps Response
 
-  User->>ADO: Add "Summon OnCall Copilot" tag
+  User->>ADO: Add "Summon Orbis" tag
   ADO->>Orc: AgenticRAGRequest {ticket_content, area_path, metadata}
   
   Note over Orc: 🎯 AGENTIC DECISION: Starting 4-step workflow
@@ -148,8 +148,8 @@ sequenceDiagram
   
   %% Azure DevOps Integration (✅ Implemented)
   ADOResp->>ADO: POST comment with formatted response
-  ADOResp->>ADO: Remove "Summon OnCall Copilot" tag
-  ADOResp->>ADO: Add "OnCall Copilot Summoned" tag
+  ADOResp->>ADO: Remove "Summon Orbis" tag
+  ADOResp->>ADO: Add "Orbis Summoned" tag
   
   Note over User,ADO: ✅ Complete agentic workflow delivered<br/>in ~1.2 seconds with high confidence
 ```

@@ -1,5 +1,5 @@
 """
-Scope and Intent Analyzer for OnCall Copilot
+Scope and Intent Analyzer for Orbis
 
 This is the first agent in the agentic RAG system that analyzes content with documentation context
 to determine scope (what components/interfaces are involved) and intent (what user wants to achieve).
@@ -15,7 +15,7 @@ from core.agents.wiki_summarization import WikiSummarizationService
 from core.schemas import ProjectContext, ScopeAnalysisResult, WikiSummary
 from core.services.project_detection import ProjectDetectionService
 from infrastructure.data_processing.data_source_service import DataSourceService
-from infrastructure.llm.openai_client import OpenAIClientService
+from orbis_core.llm.openai_client import OpenAIClientService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 from utils.prompt_loader import PromptLoader
@@ -33,7 +33,12 @@ class ScopeAnalyzer:
 
     def __init__(self, vector_service: GenericVectorService | None = None, embedding_service: EmbeddingService | None = None, openai_client_service: OpenAIClientService | None = None):
         # Use shared OpenAI client
-        self.openai_client_service = openai_client_service or OpenAIClientService()
+        self.openai_client_service = openai_client_service or OpenAIClientService(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+        )
 
         # Initialize supporting services with dependency injection
         self.wiki_service = WikiSummarizationService(
@@ -151,7 +156,7 @@ class ScopeAnalyzer:
             logger.info(f"🧠 AGENTIC SCOPE: Analyzing {len(content)} character content with {'project-specific' if project_context else 'general'} context")
 
             # Step 1: Get documentation context
-            logger.info(f"🧠 AGENTIC SCOPE: Retrieving documentation context for {'project ' + project_context.project_code if project_context and project_context.project_code else 'general OnCall system'}")
+            logger.info(f"🧠 AGENTIC SCOPE: Retrieving documentation context for {'project ' + project_context.project_code if project_context and project_context.project_code else 'general system'}")
             documentation_context = await self._get_documentation_context(project_context)
             logger.info(f"🧠 AGENTIC SCOPE: Loaded {len(documentation_context)} characters of contextual documentation")
 
@@ -216,7 +221,7 @@ class ScopeAnalyzer:
                             logger.warning("🧠 AGENTIC SCOPE: Wiki summaries unavailable - proceeding with general context only")
                     else:
                         logger.info(f"Auto-summarization disabled - skipping wiki summaries for project {project_context.project_code}")
-                        logger.info("🧠 AGENTIC SCOPE: Auto-summarization disabled - using general OnCall context without project-specific wiki summaries")
+                        logger.info("🧠 AGENTIC SCOPE: Auto-summarization disabled - using general context without project-specific wiki summaries")
                 else:
                     logger.warning(f"No wiki repositories configured for project {project_context.project_code}")
                     logger.warning(f"🧠 AGENTIC SCOPE: No wiki repositories available for project {project_context.project_code} - limited project context")

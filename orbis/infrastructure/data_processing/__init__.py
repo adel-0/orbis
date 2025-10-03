@@ -1,3 +1,3 @@
 """
-Data processing and ingestion pipelines for OnCall Copilot.
+Data processing and ingestion pipelines for Orbis.
 """

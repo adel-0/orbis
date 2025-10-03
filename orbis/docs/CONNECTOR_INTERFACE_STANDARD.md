@@ -239,7 +239,7 @@ Use this template when creating new connectors:
 
 ```python
 """
-{SYSTEM_NAME} Connector for OnCall Copilot
+{SYSTEM_NAME} Connector for Orbis
 Implements standard connector interface for {DATA_TYPE} data.
 """
 

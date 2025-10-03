@@ -1,5 +1,5 @@
 """
-Configuration management for OnCall Copilot using SQLite database.
+Configuration management for Orbis using SQLite database.
 """
 
 import logging
@@ -19,7 +19,7 @@ class Settings:
     """Application settings with database-backed data source configuration"""
 
     # API Configuration
-    API_TITLE: str = "OnCall Copilot API"
+    API_TITLE: str = "Orbis API"
     API_VERSION: str = "2.0.0"
     API_HOST: str = get_env("API_HOST", "127.0.0.1")
     API_PORT: int = get_env("API_PORT", 7887)

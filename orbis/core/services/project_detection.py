@@ -1,5 +1,5 @@
 """
-Project Detection Service for OnCall Copilot
+Project Detection Service for Orbis
 
 Simple area path based project detection using basic string matching.
 """

@@ -3,12 +3,13 @@ from functools import lru_cache
 
 from fastapi import HTTPException, Request
 
+from config.settings import settings
 from core.agents.llm_routing_agent import QueryRoutingAgent
 from core.agents.orchestrator import AgenticRAGOrchestrator
 from core.agents.summary_agent import SearchResultsSummarizer
 from core.services.generic_data_ingestion import GenericDataIngestionService
 from infrastructure.data_processing.scheduler_service import SchedulerService
-from infrastructure.llm.openai_client import OpenAIClientService
+from orbis_core.llm.openai_client import OpenAIClientService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 from infrastructure.storage.rerank_service import RerankService
@@ -17,7 +18,12 @@ from infrastructure.storage.rerank_service import RerankService
 # Simple cached service creation - replaces complex service container
 @lru_cache(maxsize=1)
 def _create_openai_client_service() -> OpenAIClientService:
-    return OpenAIClientService()
+    return OpenAIClientService(
+        api_key=settings.AZURE_OPENAI_API_KEY,
+        api_version=settings.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+        deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+    )
 
 @lru_cache(maxsize=1)
 def _create_embedding_service() -> EmbeddingService:

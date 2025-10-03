@@ -1,5 +1,5 @@
 """
-Agentic RAG API Router for OnCall Copilot
+Agentic RAG API Router for Orbis
 
 Provides endpoints for the agentic RAG system that includes:
 - Project detection

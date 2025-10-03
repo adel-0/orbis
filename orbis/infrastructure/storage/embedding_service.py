@@ -672,7 +672,7 @@ class EmbeddingService:
 
     async def _db_content_needs_embedding(self, db: Session, content_record) -> bool:
         """Check if a database Content record needs embedding"""
-        from utils.content_hash import hash_text_content
+        from orbis_core.utils.content_hash import hash_text_content
         from app.db.models import ContentEmbedding
         
         # Calculate current hash
@@ -852,7 +852,7 @@ class EmbeddingService:
         """Track that database content records have been embedded"""
         from app.db.models import ContentEmbedding
         from app.db.session import get_db_session
-        from utils.content_hash import hash_text_content
+        from orbis_core.utils.content_hash import hash_text_content
         
         current_model = self._get_current_embedding_model()
         
