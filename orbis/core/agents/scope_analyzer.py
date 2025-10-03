@@ -152,16 +152,13 @@ class ScopeAnalyzer:
             return None
 
         try:
-            logger.info("🧠 Scope Analyzer: Starting scope and intent analysis")
-            logger.info(f"🧠 AGENTIC SCOPE: Analyzing {len(content)} character content with {'project-specific' if project_context else 'general'} context")
+            logger.debug(f"Analyzing {len(content)} chars with {'project' if project_context else 'general'} context")
 
             # Step 1: Get documentation context
-            logger.info(f"🧠 AGENTIC SCOPE: Retrieving documentation context for {'project ' + project_context.project_code if project_context and project_context.project_code else 'general system'}")
             documentation_context = await self._get_documentation_context(project_context)
-            logger.info(f"🧠 AGENTIC SCOPE: Loaded {len(documentation_context)} characters of contextual documentation")
+            logger.debug(f"Loaded {len(documentation_context)} chars of context")
 
             # Step 2: Analyze with LLM
-            logger.info(f"🧠 AGENTIC SCOPE: Invoking LLM for scope analysis with {self.config['max_output_tokens']} max tokens")
             analysis_result = await self._perform_llm_analysis(
                 content,
                 project_context,
@@ -169,12 +166,9 @@ class ScopeAnalyzer:
             )
 
             if analysis_result:
-                logger.info(f"✅ Scope Analyzer: Analysis completed with confidence {analysis_result.confidence:.2f}")
-                logger.info(f"🧠 AGENTIC SCOPE: Identified scope - {analysis_result.scope_description[:150]}...")
-                logger.info(f"🧠 AGENTIC SCOPE: Identified intent - {analysis_result.intent_description[:150]}...")
-                logger.info(f"🧠 AGENTIC SCOPE: Recommending {len(analysis_result.recommended_source_types)} source types: {analysis_result.recommended_source_types}")
+                logger.debug(f"Analysis: confidence {analysis_result.confidence:.2f}, {len(analysis_result.recommended_source_types)} sources")
             else:
-                logger.error("❌ Scope Analyzer: LLM analysis returned no result")
+                logger.error("LLM analysis returned no result")
 
             return analysis_result
 
@@ -199,32 +193,26 @@ class ScopeAnalyzer:
                 wiki_repos = self.project_service.get_project_wiki_repos(project_context.project_code)
 
                 if wiki_repos:
-                    logger.info(f"🧠 AGENTIC SCOPE: Found {len(wiki_repos)} wiki repositories for project {project_context.project_code}")
-                    # Check if auto-summarization is enabled before requesting wiki summaries
+                    logger.debug(f"Found {len(wiki_repos)} wiki repos for {project_context.project_code}")
                     if self._is_auto_summarization_enabled():
-                        logger.info("🧠 AGENTIC SCOPE: Auto-summarization enabled, retrieving wiki summaries for enhanced context")
-                        # Get wiki summaries for project context
                         wiki_summaries = await self.wiki_service.get_project_wiki_summaries(
                             project_context.project_code,
                             wiki_repos
                         )
 
                         if wiki_summaries:
-                            logger.info(f"🧠 AGENTIC SCOPE: Incorporated {len(wiki_summaries)} wiki summaries for project-specific context enhancement")
+                            logger.debug(f"Loaded {len(wiki_summaries)} wiki summaries")
                             project_context_text = self._format_project_context(
                                 project_context.project_code,
                                 wiki_summaries
                             )
                             context_parts.append(f"=== PROJECT {project_context.project_code} CONTEXT ===\n{project_context_text}")
                         else:
-                            logger.warning(f"No wiki summaries available for project {project_context.project_code}")
-                            logger.warning("🧠 AGENTIC SCOPE: Wiki summaries unavailable - proceeding with general context only")
+                            logger.warning(f"No wiki summaries for {project_context.project_code}")
                     else:
-                        logger.info(f"Auto-summarization disabled - skipping wiki summaries for project {project_context.project_code}")
-                        logger.info("🧠 AGENTIC SCOPE: Auto-summarization disabled - using general context without project-specific wiki summaries")
+                        logger.debug("Auto-summarization disabled")
                 else:
-                    logger.warning(f"No wiki repositories configured for project {project_context.project_code}")
-                    logger.warning(f"🧠 AGENTIC SCOPE: No wiki repositories available for project {project_context.project_code} - limited project context")
+                    logger.debug(f"No wiki repos for {project_context.project_code}")
 
             except Exception as e:
                 logger.error(f"Error getting project context for {project_context.project_code}: {e}")
@@ -307,10 +295,8 @@ class ScopeAnalyzer:
 
             # Parse JSON response from LLM
             parsed_result = self._parse_analysis_response(analysis_text, content)
-            if parsed_result:
-                logger.info(f"🧠 AGENTIC SCOPE: Successfully parsed LLM response into structured analysis with {len(parsed_result.recommended_source_types)} source recommendations")
-            else:
-                logger.error("🧠 AGENTIC SCOPE: Failed to parse LLM response - analysis incomplete")
+            if not parsed_result:
+                logger.error("Failed to parse LLM response")
             return parsed_result
 
         except Exception as e:

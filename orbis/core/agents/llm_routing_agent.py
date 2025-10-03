@@ -204,13 +204,14 @@ class QueryRoutingAgent:
                 {"role": "developer", "content": developer_prompt},
                 {"role": "user", "content": user_prompt}
             ]
-            
-            response = await self.openai_client_service.get_chat_completion(
+
+            response = self.openai_client_service.client.chat.completions.create(
+                model=self.openai_client_service.deployment_name,
                 messages=messages,
-                max_tokens=LLM_MAX_OUTPUT_TOKENS,
+                max_completion_tokens=LLM_MAX_OUTPUT_TOKENS,
                 response_format={"type": "json_object"}  # Ensure JSON output
             )
-            
+
             return response.choices[0].message.content
 
         except Exception as e:

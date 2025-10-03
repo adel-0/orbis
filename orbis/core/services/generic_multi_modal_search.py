@@ -105,8 +105,7 @@ class GenericMultiModalSearch:
         Returns:
             GenericAggregatedSearchResult with results from all searched types
         """
-        logger.info(f"🔎 Starting generic multi-modal search for query: {query[:100]}...")
-        logger.info(f"🔍 AGENTIC SEARCH: Multi-modal search initiated with {len(source_types) if source_types else 'all'} source types, top_k={top_k}")
+        logger.debug(f"Multi-modal search: {len(source_types) if source_types else 'all'} source types, top_k={top_k}")
 
         result = GenericAggregatedSearchResult()
 
@@ -119,20 +118,19 @@ class GenericMultiModalSearch:
             source_types = [st for st in source_types if is_valid_source_type(st)]
 
         if not source_types:
-            logger.warning("⚠️ No valid source types specified for search")
+            logger.warning("No valid source types for search")
             return result
 
-        logger.info(f"🎯 Searching source types: {source_types}")
+        logger.debug(f"Searching: {source_types}")
 
         # Generate query embedding once
-        logger.debug("DEBUG: Generating query embedding...")
-        logger.info("🔍 AGENTIC SEARCH: Generating semantic embedding for query optimization")
+        logger.debug("Generating query embedding")
         query_embedding = await self.embedding_service.embed_query(query)
         if not query_embedding:
-            logger.error("❌ Could not generate embedding for query")
+            logger.error("Could not generate embedding")
             return result
 
-        logger.info(f"🔍 AGENTIC SEARCH: Generated {len(query_embedding)}-dimensional embedding for semantic similarity search")
+        logger.debug(f"Generated {len(query_embedding)}-dim embedding")
 
         # Prepare search tasks for each source type
         search_tasks = []
@@ -189,21 +187,20 @@ class GenericMultiModalSearch:
         Search based on scope analysis recommendations.
         Maintains compatibility with existing scope-based search.
         """
-        logger.info("🔍 AGENTIC SEARCH: Starting scope-driven search based on analyzer recommendations")
-        logger.info(f"🔍 AGENTIC SEARCH: Scope confidence {scope_analysis.confidence:.2f}, targeting {len(scope_analysis.recommended_source_types)} source types")
+        logger.debug(f"Scope-driven search: confidence {scope_analysis.confidence:.2f}, {len(scope_analysis.recommended_source_types)} source types")
 
         # Map scope analysis source types to configuration source types
         source_types = self._map_scope_to_source_types(scope_analysis.recommended_source_types)
-        logger.info(f"🔍 AGENTIC SEARCH: Mapped to search source types: {source_types}")
+        logger.debug(f"Source types: {source_types}")
 
         # Build filters from scope analysis and project code
         filters = self._build_filters_from_scope(scope_analysis, project_code)
         if filters:
-            logger.info(f"🔍 AGENTIC SEARCH: Applied scope-based filters: {filters}")
+            logger.debug(f"Filters: {filters}")
         if project_code:
-            logger.info(f"🔍 AGENTIC SEARCH: Project-scoped search for: {project_code}")
+            logger.debug(f"Project: {project_code}")
 
-        logger.info(f"🔍 AGENTIC SEARCH: Executing search with top_k={self.config['default_top_k']} per source type")
+        logger.debug(f"Executing with top_k={self.config['default_top_k']}")
         return await self.search(
             query=query,
             source_types=source_types,

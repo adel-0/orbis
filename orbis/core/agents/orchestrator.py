@@ -121,23 +121,15 @@ class AgenticRAGOrchestrator:
         """
         start_time = time.time()
 
-        logger.info(f"Starting agentic RAG processing for content: {request.content[:100]}...")
+        logger.info(f"Processing request: {request.content[:80]}...")
 
         try:
             # Step 1: Project Detection
-            logger.info("🔍 Step 1: Project detection")
-            logger.info(f"🎫 Starting project detection for area_path: '{request.area_path}'")
             project_context = self._detect_project_context(request)
-
-            if self.config["log_intermediate_results"]:
-                if project_context:
-                    logger.info(f"✅ Project detected: {project_context.project_code}")
-                else:
-                    logger.info("🔍 No specific project detected, using general context")
+            logger.debug(f"Project detection: {project_context.project_code if project_context else 'general'}")
 
             # Step 2: Content Scope Analysis
-            logger.info("🧠 Step 2: Content scope and intent analysis")
-            logger.info(f"🎫 AGENTIC DECISION: Analyzing content scope with {'project-specific' if project_context else 'general'} documentation context")
+            logger.debug(f"Analyzing scope with {'project-specific' if project_context else 'general'} context")
             scope_analysis = await self._analyze_scope_and_intent(request, project_context)
 
             if not scope_analysis:
@@ -148,42 +140,25 @@ class AgenticRAGOrchestrator:
                     start_time
                 )
 
-            if self.config["log_intermediate_results"]:
-                logger.info("✅ Content scope analysis completed:")
-                logger.info(f"  📋 Scope: {scope_analysis.scope_description[:100]}...")
-                logger.info(f"  🎯 Intent: {scope_analysis.intent_description[:100]}...")
-                logger.info(f"  📊 Confidence: {scope_analysis.confidence:.2f}")
-                logger.info(f"  📚 Recommended sources: {scope_analysis.recommended_source_types}")
-                logger.info(f"🧠 AGENTIC DECISION: Scope analyzer recommends searching {len(scope_analysis.recommended_source_types)} source types: {', '.join(scope_analysis.recommended_source_types)}")
+            logger.debug(f"Scope: {scope_analysis.scope_description[:80]}...")
+            logger.debug(f"Recommended sources: {', '.join(scope_analysis.recommended_source_types)}")
 
             # Check if confidence is sufficient to proceed
             if scope_analysis.confidence < self.config["min_confidence_threshold"]:
-                logger.warning(f"⚠️ Content scope analysis confidence ({scope_analysis.confidence:.2f}) below threshold ({self.config['min_confidence_threshold']})")
-                logger.warning(f"🚨 AGENTIC DECISION: Low confidence detected - proceeding with {'fallback enabled' if self.config['enable_fallback'] else 'error response'}")
+                logger.warning(f"Low confidence ({scope_analysis.confidence:.2f}), using fallback")
                 if not self.config["enable_fallback"]:
-                    logger.info("🚨 AGENTIC DECISION: Returning low confidence response due to disabled fallback")
                     return self._create_low_confidence_response(
                         request, project_context, scope_analysis, start_time
                     )
-                else:
-                    logger.info("🚨 AGENTIC DECISION: Continuing with fallback enabled despite low confidence")
 
-            # Step 3: Intelligent Routing - Data Source Selection
-            logger.info("🤖 Step 3: Intelligent routing - Data source selection")
-            logger.info(f"🧠 AGENTIC DECISION: Analyzing query for intelligent data source routing")
+            # Step 3: Intelligent Routing
+            logger.debug("Getting routing recommendations")
             routing_recommendations = await self._get_routing_recommendations(request, scope_analysis, project_context)
-            
-            if self.config["log_intermediate_results"] and routing_recommendations:
-                logger.info("✅ Routing analysis completed:")
-                logger.info(f"  📊 Recommended sources: {len(routing_recommendations)}")
-                for rec in routing_recommendations[:3]:  # Log top 3
-                    logger.info(f"  • {rec.source_name} ({rec.source_type}): {rec.relevance_score:.2f} - {rec.reasoning[:80]}...")
-                logger.info(f"🤖 AGENTIC DECISION: Routing agent recommends {len(routing_recommendations)} specific data source instances")
+            if routing_recommendations:
+                logger.debug(f"Routing: {len(routing_recommendations)} sources recommended")
 
             # Step 4: Multi-Modal Search
-            logger.info("🔎 Step 4: Multi-modal search")
-            logger.info(f"🔍 AGENTIC DECISION: Initiating multi-modal search with intelligent routing recommendations")
-            logger.debug("DEBUG: Starting multi-modal search with routing recommendations...")
+            logger.debug("Starting multi-modal search")
             search_results = await self._perform_multi_modal_search(
                 request.content,
                 scope_analysis,
@@ -191,56 +166,21 @@ class AgenticRAGOrchestrator:
                 routing_recommendations
             )
 
-            if self.config["log_intermediate_results"]:
-                logger.info("✅ Search completed:")
-                logger.info(f"  🎫 Work items: {len(getattr(search_results, 'workitem_results', []))}")
-                logger.info(f"  📖 Wiki pages: {len(getattr(search_results, 'wiki_results', []))}")
-                logger.info(f"  💻 Code files: {len(getattr(search_results, 'code_results', []))}")
-                logger.info(f"  📄 PDF docs: {len(getattr(search_results, 'pdf_results', []))}")
-                logger.info(f"  📊 Total results: {search_results.total_results}")
-                logger.info(f"  🔧 Collections searched: {search_results.collections_searched}")
-                logger.info(f"🔍 AGENTIC DECISION: Search returned {search_results.total_results} total results across {len(search_results.collections_searched)} collections")
-                if search_results.total_results == 0:
-                    logger.warning("🔍 AGENTIC DECISION: No search results found - documentation aggregator will use fallback approach")
-                else:
-                    top_sources = []
-                    if hasattr(search_results, 'workitem_results') and search_results.workitem_results:
-                        top_sources.append(f"{len(search_results.workitem_results)} work items")
-                    if hasattr(search_results, 'wiki_results') and search_results.wiki_results:
-                        top_sources.append(f"{len(search_results.wiki_results)} wiki pages")
-                    if hasattr(search_results, 'code_results') and search_results.code_results:
-                        top_sources.append(f"{len(search_results.code_results)} code files")
-                    if hasattr(search_results, 'pdf_results') and search_results.pdf_results:
-                        top_sources.append(f"{len(search_results.pdf_results)} PDF docs")
-                    logger.info(f"🔍 AGENTIC DECISION: Primary sources available: {', '.join(top_sources)}")
+            logger.info(f"Search: {search_results.total_results} results from {len(search_results.collections_searched)} collections")
+            if search_results.total_results == 0:
+                logger.warning("No results found, using fallback")
 
             # Step 5: Documentation Aggregation
-            logger.info("📖 Step 4: Documentation aggregation")
-            logger.info(f"📚 AGENTIC DECISION: Aggregating {search_results.total_results} search results with scope guidance for final synthesis")
-            logger.debug("DEBUG: Starting documentation aggregator with search results...")
+            logger.debug("Aggregating documentation")
             final_summary, source_references, overall_confidence = await self._aggregate_documentation(
                 request.content,
                 scope_analysis,
                 search_results
             )
 
-            processing_time = int((time.time() - start_time) * 1000)  # Convert to milliseconds
-
-            if self.config["log_intermediate_results"]:
-                logger.info("✅ Documentation aggregation completed:")
-                logger.info(f"  📝 Summary length: {len(final_summary)} characters")
-                logger.info(f"  📚 Source references: {len(source_references)}")
-                logger.info(f"  📊 Overall confidence: {overall_confidence:.2f}")
-                logger.info(f"  ⏱️ Processing time: {processing_time}ms")
-                logger.info(f"📚 AGENTIC DECISION: Final synthesis completed with {len(source_references)} authoritative sources")
-                logger.info(f"📚 AGENTIC DECISION: Overall pipeline confidence: {overall_confidence:.2f} (scope: {scope_analysis.confidence:.2f} → final: {overall_confidence:.2f})")
-                if overall_confidence != scope_analysis.confidence:
-                    confidence_change = overall_confidence - scope_analysis.confidence
-                    direction = "increased" if confidence_change > 0 else "decreased"
-                    logger.info(f"📚 AGENTIC DECISION: Confidence {direction} by {abs(confidence_change):.2f} during documentation synthesis")
+            processing_time = int((time.time() - start_time) * 1000)
 
             # Create final response
-            logger.debug("DEBUG: Creating final AgenticRAGResponse...")
             response = AgenticRAGResponse(
                 project_context=project_context or self._create_default_project_context(),
                 scope_analysis=scope_analysis,
@@ -250,7 +190,7 @@ class AgenticRAGOrchestrator:
                 processing_time_ms=processing_time
             )
 
-            logger.info(f"🎉 Agentic RAG processing completed successfully in {processing_time}ms")
+            logger.info(f"Completed in {processing_time}ms: {len(source_references)} sources, confidence {overall_confidence:.2f}")
             return response
 
         except Exception as e:

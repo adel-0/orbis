@@ -47,15 +47,12 @@ async def process_content_agentic(
                 detail="Agentic RAG system is not properly configured. Please check service health."
             )
 
-        logger.info(f"📝 Processing agentic RAG request for content: {request.content[:100]}...")
-        logger.debug(f"DEBUG: Request area_path: {request.area_path}")
+        logger.info(f"Processing: {request.content[:60]}...")
 
         # Process the content through the complete agentic RAG workflow
         response = await orchestrator.process_content(request)
 
-        logger.info(f"✅ Agentic RAG processing completed in {response.processing_time_ms}ms")
-        logger.info(f"📊 Overall confidence: {response.overall_confidence:.2f}")
-        logger.info(f"📚 Sources referenced: {len(response.referenced_sources)}")
+        logger.info(f"Completed: {response.processing_time_ms}ms, confidence {response.overall_confidence:.2f}, {len(response.referenced_sources)} sources")
 
         return response
 

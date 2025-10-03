@@ -7,7 +7,7 @@ handling very large wiki content (hundreds of thousands of tokens).
 
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -716,7 +716,7 @@ class WikiSummarizationService:
                     return None
 
                 # Check if cache is still fresh
-                refresh_threshold = datetime.now() - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
+                refresh_threshold = datetime.now(timezone.utc) - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
                 if cache_entry.last_refreshed_at < refresh_threshold:
                     logger.debug(f"Cache entry for {cache_key} is stale (last refreshed: {cache_entry.last_refreshed_at})")
                     return None
@@ -742,7 +742,7 @@ class WikiSummarizationService:
                     return True  # No cache entry, needs refresh
 
                 # Check if cache is stale
-                refresh_threshold = datetime.now() - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
+                refresh_threshold = datetime.now(timezone.utc) - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
                 return cache_entry.last_refreshed_at < refresh_threshold
 
         except Exception as e:
@@ -782,7 +782,7 @@ class WikiSummarizationService:
         """Save wiki summary to persistent cache"""
         try:
             cache_key = self._build_cache_key(wiki_name, project_code)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             with get_db_session() as db:
                 # Check if cache entry already exists
@@ -861,7 +861,7 @@ class WikiSummarizationService:
                     project_counts[project_code] = count
 
                 # Count stale entries
-                refresh_threshold = datetime.now() - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
+                refresh_threshold = datetime.now(timezone.utc) - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
                 stale_count = db.query(WikiSummaryCache).filter(
                     WikiSummaryCache.last_refreshed_at < refresh_threshold
                 ).count()

@@ -133,34 +133,21 @@ class DocumentationAggregator:
                 ranked_sources
             )
             # Step 4: Generate comprehensive summary
-            logger.info(f"📖 AGENTIC AGGREGATION: Invoking LLM for final synthesis with max {self.config['max_output_tokens']} tokens")
+            logger.debug(f"Generating summary (max {self.config['max_output_tokens']} tokens)")
             final_summary = await self._generate_comprehensive_summary(aggregation_context)
 
             # Step 5: Calculate overall confidence
-            logger.info(f"📖 AGENTIC AGGREGATION: Calculating final confidence score based on scope confidence ({scope_analysis.confidence:.2f}) and {len(ranked_sources)} source quality")
             overall_confidence = self._calculate_overall_confidence(
                 scope_analysis,
                 search_results,
                 len(ranked_sources)
             )
-            logger.info(f"📖 AGENTIC AGGREGATION: Final confidence calculated: {overall_confidence:.2f} (combining analysis quality, source count, and summary completeness)")
-
-            logger.info(f"Documentation Aggregator: Aggregation completed with confidence {overall_confidence:.2f}")
-            logger.info(f"Documentation Aggregator: Referenced {len(source_references)} sources")
-            logger.info(f"📖 AGENTIC AGGREGATION: Synthesis completed successfully - generated {len(final_summary)} character comprehensive response")
-
-            confidence_factors = {
-                "scope_confidence": scope_analysis.confidence,
-                "source_count": len(source_references),
-                "summary_length": len(final_summary)
-            }
-            logger.info(f"📖 AGENTIC AGGREGATION: Confidence factors - Scope: {confidence_factors['scope_confidence']:.2f}, Sources: {confidence_factors['source_count']}, Summary: {confidence_factors['summary_length']} chars")
+            logger.debug(f"Confidence: {overall_confidence:.2f}, sources: {len(source_references)}, summary: {len(final_summary)} chars")
 
             return final_summary, source_references, overall_confidence
 
         except Exception as e:
-            logger.error(f"Error in Documentation Aggregator documentation aggregation: {e}")
-            logger.error("📖 AGENTIC AGGREGATION: Critical failure in synthesis pipeline - reverting to fallback summary")
+            logger.error(f"Aggregation error: {e}, using fallback")
             fallback_summary = self._create_fallback_summary(original_content, scope_analysis)
             return fallback_summary, [], 0.2
 

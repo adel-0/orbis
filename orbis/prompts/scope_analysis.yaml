@@ -49,13 +49,13 @@ developer_prompt: |
 
   Example Output
   ```json
-  {
+  {{
     "scope_description": "User is asking about the authentication subsystem and login API.",
     "intent_description": "User wants to troubleshoot login failures.",
     "confidence": 0.9,
     "recommended_source_types": ["azdo_workitems", "azdo_wiki"],
     "reasoning": "Authentication issues may be documented in work items, and procedural troubleshooting steps may be in the wiki."
-  }
+  }}
   ```
 
   After producing your output, validate that the JSON structure matches the required keys and order exactly. If it does not, self-correct before submitting.

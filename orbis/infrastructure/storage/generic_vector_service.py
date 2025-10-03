@@ -57,9 +57,11 @@ class GenericVectorService:
             logger.info(f"Database path: {self.db_path}")
 
             # Log collection info
-            for collection_name, collection in self.collections.items():
-                count = collection.count()
-                logger.info(f"Collection '{collection_name}': {count} documents")
+            collections_summary = {name: coll.count() for name, coll in self.collections.items()}
+            total_docs = sum(collections_summary.values())
+            logger.info(f"{len(self.collections)} collections, {total_docs} total documents")
+            for name, count in collections_summary.items():
+                logger.debug(f"  {name}: {count} documents")
 
         except Exception as e:
             logger.error(f"Failed to initialize ChromaDB: {e}")

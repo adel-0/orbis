@@ -41,10 +41,9 @@ async def lifespan(app: FastAPI):
             from core.agents.wiki_summarization import WikiSummarizationService
             from core.services.generic_data_ingestion import GenericDataIngestionService
 
-            # First, ensure wiki data is ingested (without embedding dependencies)
+            # First, ensure wiki data is ingested (without embedding - that happens via /embed endpoint)
             logger.info("🔄 Auto-ingesting wiki data...")
             ingestion_service = GenericDataIngestionService()
-            # Note: Embedding services are no longer required for basic ingestion
 
             # Get only wiki data sources
             from infrastructure.data_processing.data_source_service import (
@@ -56,7 +55,7 @@ async def lifespan(app: FastAPI):
             ingestion_result = await ingestion_service.ingest_all_sources(
                 source_names=wiki_sources,  # Only ingest wiki sources
                 force_full_sync=False,
-                skip_embedding=False
+                skip_embedding=True  # Embedding happens via /embed endpoint, not during startup
             )
 
             if ingestion_result.get("total_processed", 0) > 0:
