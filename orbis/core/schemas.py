@@ -135,17 +135,10 @@ class ErrorResponse(BaseModel):
 class EmbeddingProviderInfo(BaseModel):
     loaded: bool
     provider: str
-    current_provider: str
     model_name: str | None = None
     device: str | None = None
     max_seq_length: int | str | None = None
     embedding_dimension: int | None = None
-    deployment_name: str | None = None
-    endpoint: str | None = None
-    api_version: str | None = None
-
-class SwitchProviderRequest(BaseModel):
-    provider: str = Field(..., description="Provider to switch to ('local' or 'azure')")
 
 # Data ingestion schemas
 class DataIngestionRequest(BaseModel):

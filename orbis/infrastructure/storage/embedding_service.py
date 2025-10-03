@@ -4,7 +4,6 @@ import logging
 import time
 from typing import Any, Protocol
 
-from openai import AzureOpenAI
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
@@ -135,90 +134,8 @@ class LocalEmbeddingProvider:
         if self.device == "cuda" and self._torch.cuda.is_available():
             self._torch.cuda.empty_cache()
 
-class AzureOpenAIEmbeddingProvider:
-    """Azure OpenAI embedding provider using text-embedding-v3-large"""
-
-    def __init__(self):
-        self.client: AzureOpenAI | None = None
-        self.deployment_name = settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME
-        self.api_version = settings.AZURE_OPENAI_EMBEDDING_API_VERSION
-        self._initialize_client()
-
-    def _initialize_client(self):
-        """Initialize Azure OpenAI client for embeddings"""
-        try:
-            if not settings.AZURE_OPENAI_EMBEDDING_ENDPOINT or not settings.AZURE_OPENAI_EMBEDDING_API_KEY:
-                raise ValueError("Azure OpenAI embedding endpoint and API key must be configured")
-
-            logger.info(f"Initializing Azure OpenAI embedding client with deployment: {self.deployment_name}")
-
-            self.client = AzureOpenAI(
-                azure_endpoint=settings.AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                api_key=settings.AZURE_OPENAI_EMBEDDING_API_KEY,
-                api_version=self.api_version
-            )
-            logger.info("Azure OpenAI embedding client initialized successfully")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize Azure OpenAI embedding client: {e}")
-            raise
-
-    def encode_texts(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
-        """Encode a list of texts to embeddings using Azure OpenAI"""
-        if not self.client:
-            raise RuntimeError("Azure OpenAI embedding client not initialized")
-
-        if not texts:
-            return []
-
-        try:
-            embeddings = []
-            # Process texts in batches for better performance
-            batch_size = batch_size or settings.EMBEDDING_BULK_BATCH_SIZE
-
-            for i in range(0, len(texts), batch_size):
-                batch_texts = texts[i:i + batch_size]
-
-                response = self.client.embeddings.create(
-                    model=self.deployment_name,
-                    input=batch_texts,
-                    encoding_format="float"
-                )
-
-                batch_embeddings = [embedding.embedding for embedding in response.data]
-                embeddings.extend(batch_embeddings)
-
-            return embeddings
-
-        except Exception as e:
-            logger.error(f"Failed to encode texts with Azure OpenAI: {e}")
-            raise
-
-    def encode_single_text(self, text: str) -> list[float]:
-        """Encode a single text to embedding"""
-        embeddings = self.encode_texts([text])
-        return embeddings[0] if embeddings else []
-
-    def get_model_info(self) -> dict:
-        """Get information about the Azure OpenAI embedding model"""
-        if not self.client:
-            return {"loaded": False, "provider": "azure"}
-
-        return {
-            "loaded": True,
-            "provider": "azure",
-            "deployment_name": self.deployment_name,
-            "endpoint": settings.AZURE_OPENAI_EMBEDDING_ENDPOINT,
-            "api_version": self.api_version,
-            "embedding_dimension": None  # Dynamic based on deployment
-        }
-
-    def is_loaded(self) -> bool:
-        """Check if the client is initialized"""
-        return self.client is not None
-
 class EmbeddingService:
-    """Main embedding service that uses strategy pattern to support multiple providers"""
+    """Main embedding service using local embedding provider"""
 
     def __init__(self):
         self.provider: EmbeddingProvider | None = None
@@ -227,22 +144,17 @@ class EmbeddingService:
         self._provider_initialized = False
 
     def _ensure_provider_initialized(self):
-        """Lazily initialize the appropriate embedding provider based on configuration"""
+        """Lazily initialize the local embedding provider"""
         if self._provider_initialized:
             return
 
-        if settings.EMBEDDING_PROVIDER == "azure":
-            logger.info("Initializing Azure OpenAI embedding provider")
-            self.provider = AzureOpenAIEmbeddingProvider()
-        else:
-            if not LOCAL_DEPENDENCIES_AVAILABLE:
-                raise ImportError(
-                    "Local embedding provider requested but dependencies are not installed. "
-                    "Either install local dependencies (torch, sentence-transformers, transformers) "
-                    "or set EMBEDDING_PROVIDER=azure in your environment."
-                )
-            logger.info("Initializing local embedding provider")
-            self.provider = LocalEmbeddingProvider()
+        if not LOCAL_DEPENDENCIES_AVAILABLE:
+            raise ImportError(
+                "Local embedding dependencies (torch, sentence-transformers, transformers) are not installed. "
+                "Please install them with: pip install torch sentence-transformers transformers"
+            )
+        logger.info("Initializing local embedding provider")
+        self.provider = LocalEmbeddingProvider()
 
         self._provider_initialized = True
 
@@ -268,9 +180,7 @@ class EmbeddingService:
         if not self.provider:
             return {"loaded": False, "provider": "none"}
 
-        info = self.provider.get_model_info()
-        info["current_provider"] = settings.EMBEDDING_PROVIDER
-        return info
+        return self.provider.get_model_info()
 
     def is_loaded(self) -> bool:
         """Check if the provider is loaded"""
@@ -456,12 +366,7 @@ class EmbeddingService:
 
     def _get_current_embedding_model(self) -> str:
         """Get the current embedding model identifier"""
-        if hasattr(settings, 'AZURE_OPENAI_EMBEDDING_MODEL'):
-            return f"azure:{settings.AZURE_OPENAI_EMBEDDING_MODEL}"
-        elif hasattr(settings, 'LOCAL_EMBEDDING_MODEL'):
-            return f"local:{settings.LOCAL_EMBEDDING_MODEL}"
-        else:
-            return "unknown"
+        return f"local:{settings.LOCAL_EMBEDDING_MODEL}"
 
     async def generate_embeddings_incremental(
         self,

@@ -32,18 +32,11 @@ class Settings:
     AZURE_OPENAI_API_VERSION: str = get_env("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
     AZURE_OPENAI_DEPLOYMENT_NAME: str = get_env("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-5-mini")
 
-    # Azure OpenAI Embedding settings
-    AZURE_OPENAI_EMBEDDING_ENDPOINT: str = get_env("AZURE_OPENAI_EMBEDDING_ENDPOINT", "")
-    AZURE_OPENAI_EMBEDDING_API_KEY: str = get_env("AZURE_OPENAI_EMBEDDING_API_KEY", "")
-    AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME: str = get_env("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", "text-embedding-3-large")
-    AZURE_OPENAI_EMBEDDING_API_VERSION: str = get_env("AZURE_OPENAI_EMBEDDING_API_VERSION", "2024-02-15-preview")
-
     # Embedding settings
-    EMBEDDING_PROVIDER: str = get_env("EMBEDDING_PROVIDER", "azure")
     EMBEDDING_DEVICE: str = get_env("EMBEDDING_DEVICE", "cpu")
     EMBEDDING_BULK_BATCH_SIZE: int = get_env("EMBEDDING_BULK_BATCH_SIZE", 32)
 
-    # Local embedding settings (for when EMBEDDING_PROVIDER=local)
+    # Local embedding settings
     LOCAL_EMBEDDING_MODEL: str = get_env("LOCAL_EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
     LOCAL_RERANK_MODEL: str = get_env("LOCAL_RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 
