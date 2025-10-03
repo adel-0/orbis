@@ -4,6 +4,7 @@ Provides text embedding generation with token-aware chunking for long documents.
 """
 from typing import Any, Optional
 import logging
+import asyncio
 
 from .text_chunking import chunk_text, should_chunk_text
 
@@ -26,6 +27,24 @@ class EmbeddingService:
             max_chunk_size: Maximum tokens per chunk
             hugging_face_token: Optional Hugging Face API token
         """
+        self.model = None
+        self.tokenizer = None
+        self.device = device
+        self.model_name = model_name
+        self.bulk_batch_size = batch_size
+        self.max_chunk_size = max_chunk_size
+        self.hugging_face_token = hugging_face_token
+        self._model_loaded = False
+
+        # Store references for lazy loading
+        self._SentenceTransformer = None
+        self._torch = None
+
+    def _ensure_model_loaded(self):
+        """Lazily initialize the embedding model"""
+        if self._model_loaded:
+            return
+
         # Import here to avoid import-time side effects
         from sentence_transformers import SentenceTransformer  # type: ignore
         import torch  # type: ignore
@@ -33,13 +52,8 @@ class EmbeddingService:
         self._SentenceTransformer = SentenceTransformer
         self._torch = torch
 
-        self.model = None
-        self.device = device
-        self.model_name = model_name
-        self.bulk_batch_size = batch_size
-        self.max_chunk_size = max_chunk_size
-        self.hugging_face_token = hugging_face_token
         self._load_model()
+        self._model_loaded = True
 
     def _load_model(self):
         """Load the embedding model with Hugging Face authentication if needed"""
@@ -78,6 +92,8 @@ class EmbeddingService:
 
     def encode_texts(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
         """Encode a list of texts to embeddings"""
+        self._ensure_model_loaded()
+
         if not self.model:
             raise RuntimeError("Local embedding model not loaded")
 
@@ -105,6 +121,8 @@ class EmbeddingService:
 
     def encode_single_text(self, text: str, max_length: int | None = None) -> list[float]:
         """Encode a single text to embedding with chunking for long texts"""
+        self._ensure_model_loaded()
+
         # Get max sequence length from model if not provided
         if max_length is None:
             model_max_length = getattr(self.model, 'max_seq_length', self.max_chunk_size)
@@ -170,7 +188,7 @@ class EmbeddingService:
 
     def get_model_info(self) -> dict:
         """Get information about the loaded model"""
-        if not self.model:
+        if not self._model_loaded or not self.model:
             return {"loaded": False}
 
         return {
@@ -183,9 +201,18 @@ class EmbeddingService:
 
     def is_loaded(self) -> bool:
         """Check if the model is loaded"""
-        return self.model is not None
+        return self._model_loaded and self.model is not None
 
     def clear_cache(self):
         """Clear CUDA cache to free memory"""
-        if self.device == "cuda" and self._torch.cuda.is_available():
+        if self._model_loaded and self.device == "cuda" and self._torch.cuda.is_available():
             self._torch.cuda.empty_cache()
+
+    async def embed_query(self, query: str) -> list[float]:
+        """Embed a search query (async wrapper for encode_single_text)"""
+        self._ensure_model_loaded()
+        if not self.model:
+            raise RuntimeError("Embedding model not loaded")
+
+        # Use asyncio.to_thread to make the sync call async
+        return await asyncio.to_thread(self.encode_single_text, query)

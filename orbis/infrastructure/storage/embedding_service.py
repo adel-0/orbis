@@ -1,8 +1,7 @@
 import asyncio
-import importlib.util
 import logging
 import time
-from typing import Any, Protocol
+from typing import Any
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
@@ -10,151 +9,33 @@ from sqlalchemy.orm import Session
 from config.settings import settings
 from core.schemas import BaseContent
 from infrastructure.storage.generic_vector_service import GenericVectorService
-
-# Defer heavy imports to runtime; only check availability here
-LOCAL_DEPENDENCIES_AVAILABLE = (
-    importlib.util.find_spec("sentence_transformers") is not None
-    and importlib.util.find_spec("torch") is not None
-)
+from orbis_core.embedding import EmbeddingService as CoreEmbeddingService
 
 logger = logging.getLogger(__name__)
 
-class EmbeddingProvider(Protocol):
-    """Protocol for embedding providers"""
-    def encode_texts(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
-        ...
-
-    def encode_single_text(self, text: str) -> list[float]:
-        ...
-
-    def get_model_info(self) -> dict:
-        ...
-
-    def is_loaded(self) -> bool:
-        ...
-
-class LocalEmbeddingProvider:
-    """Local embedding provider using sentence-transformers"""
-
-    def __init__(self):
-        if not LOCAL_DEPENDENCIES_AVAILABLE:
-            raise ImportError(
-                "Local embedding dependencies (torch, sentence-transformers) are not installed. "
-                "Please install them with: pip install torch sentence-transformers transformers"
-            )
-
-        # Import here to avoid import-time side effects when running tests on environments
-        # where torch may not load cleanly.
-        import torch  # type: ignore
-        from sentence_transformers import SentenceTransformer  # type: ignore
-
-        self._SentenceTransformer = SentenceTransformer
-        self._torch = torch
-
-        self.model = None  # will hold an instance of SentenceTransformer
-        self.device = settings.EMBEDDING_DEVICE
-        self.model_name = settings.LOCAL_EMBEDDING_MODEL
-        self.batch_size = settings.EMBEDDING_BULK_BATCH_SIZE
-        self._load_model()
-
-    def _load_model(self):
-        """Load the all-mpnet-base-v2 embedding model"""
-        try:
-            logger.info(f"Loading local embedding model: {self.model_name}")
-            logger.info(f"Using device: {self.device}")
-
-            # Check if CUDA is available
-            if self.device == "cuda" and not self._torch.cuda.is_available():
-                logger.warning("CUDA requested but not available, falling back to CPU")
-                self.device = "cpu"
-
-            # Load model - all-mpnet-base-v2 is already optimized and doesn't need half precision
-            self.model = self._SentenceTransformer(self.model_name, device=self.device)
-
-            # Test the model
-            test_embedding = self.model.encode("test", convert_to_tensor=True)
-            logger.info(f"Local model loaded successfully. Embedding dimension: {test_embedding.shape[0]}")
-
-        except Exception as e:
-            logger.error(f"Failed to load local embedding model: {e}")
-            raise
-
-    def encode_texts(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
-        """Encode a list of texts to embeddings"""
-        if not self.model:
-            raise RuntimeError("Local embedding model not loaded")
-
-        if not texts:
-            return []
-
-        batch_size = batch_size or self.batch_size
-
-        try:
-            # Encode texts in batches - all-mpnet-base-v2 is optimized for speed
-            embeddings = self.model.encode(
-                texts,
-                batch_size=batch_size,
-                convert_to_tensor=False,
-                show_progress_bar=False,
-                normalize_embeddings=True
-            )
-
-            # Convert to list of lists
-            return embeddings.tolist() if hasattr(embeddings, 'tolist') else embeddings
-
-        except Exception as e:
-            logger.error(f"Failed to encode texts with local model: {e}")
-            raise
-
-    def encode_single_text(self, text: str) -> list[float]:
-        """Encode a single text to embedding"""
-        embeddings = self.encode_texts([text])
-        return embeddings[0] if embeddings else []
-
-    def get_model_info(self) -> dict:
-        """Get information about the loaded model"""
-        if not self.model:
-            return {"loaded": False, "provider": "local"}
-
-        return {
-            "loaded": True,
-            "provider": "local",
-            "model_name": self.model_name,
-            "device": self.device,
-            "max_seq_length": getattr(self.model, 'max_seq_length', 'unknown'),
-            "embedding_dimension": self.model.get_sentence_embedding_dimension()
-        }
-
-    def is_loaded(self) -> bool:
-        """Check if the model is loaded"""
-        return self.model is not None
-
-    def clear_cache(self):
-        """Clear CUDA cache to free memory"""
-        if self.device == "cuda" and self._torch.cuda.is_available():
-            self._torch.cuda.empty_cache()
 
 class EmbeddingService:
-    """Main embedding service using local embedding provider"""
+    """Main embedding service with database tracking and incremental embedding support"""
 
     def __init__(self):
-        self.provider: EmbeddingProvider | None = None
+        self.provider: CoreEmbeddingService | None = None
         # Optional vector service attachment for convenience methods
         self.vector_service: GenericVectorService | None = None
         self._provider_initialized = False
 
     def _ensure_provider_initialized(self):
-        """Lazily initialize the local embedding provider"""
+        """Lazily initialize the core embedding service"""
         if self._provider_initialized:
             return
 
-        if not LOCAL_DEPENDENCIES_AVAILABLE:
-            raise ImportError(
-                "Local embedding dependencies (torch, sentence-transformers, transformers) are not installed. "
-                "Please install them with: pip install torch sentence-transformers transformers"
-            )
-        logger.info("Initializing local embedding provider")
-        self.provider = LocalEmbeddingProvider()
+        logger.info("Initializing core embedding service")
+        self.provider = CoreEmbeddingService(
+            model_name=settings.LOCAL_EMBEDDING_MODEL,
+            device=settings.EMBEDDING_DEVICE,
+            batch_size=settings.EMBEDDING_BULK_BATCH_SIZE,
+            max_chunk_size=getattr(settings, 'EMBEDDING_MAX_CHUNK_SIZE', 384),
+            hugging_face_token=getattr(settings, 'HUGGING_FACE_TOKEN', None)
+        )
 
         self._provider_initialized = True
 
@@ -199,8 +80,8 @@ class EmbeddingService:
         if not self.provider:
             raise RuntimeError("Embedding provider not initialized")
 
-        # Use asyncio.to_thread to make the sync call async
-        return await asyncio.to_thread(self.provider.encode_single_text, query)
+        # Use the core service's async method
+        return await self.provider.embed_query(query)
 
 
 
@@ -543,11 +424,11 @@ class EmbeddingService:
 
     async def _needs_embedding(self, db: Session, content_item: BaseContent) -> bool:
         """Check if a BaseContent item needs embedding"""
-        from utils.content_hash import hash_content
+        from orbis_core.utils.content_hash import hash_object
         from app.db.models import ContentEmbedding
-        
+
         # Calculate current hash
-        current_hash = hash_content(content_item)
+        current_hash = hash_object(content_item, 'title', 'content')
         current_model = self._get_current_embedding_model()
         
         # Get content ID (assuming it has an id attribute)
@@ -720,17 +601,17 @@ class EmbeddingService:
         """Track that items have been embedded"""
         from app.db.models import ContentEmbedding
         from app.db.session import get_db_session
-        from utils.content_hash import hash_content
-        
+        from orbis_core.utils.content_hash import hash_object
+
         current_model = self._get_current_embedding_model()
-        
+
         with get_db_session() as db:
             for content_item in content_items:
                 content_id = getattr(content_item, 'id', None)
                 if content_id is None:
                     continue
-                
-                current_hash = hash_content(content_item)
+
+                current_hash = hash_object(content_item, 'title', 'content')
                 vector_id = f"content_{content_id}"  # Vector database ID pattern
                 
                 # Upsert embedding tracking record
