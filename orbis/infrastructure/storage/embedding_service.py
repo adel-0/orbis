@@ -55,7 +55,7 @@ class LocalEmbeddingProvider:
         self.model = None  # will hold an instance of SentenceTransformer
         self.device = settings.EMBEDDING_DEVICE
         self.model_name = settings.LOCAL_EMBEDDING_MODEL
-        self.batch_size = settings.EMBEDDING_BATCH_SIZE
+        self.batch_size = settings.EMBEDDING_BULK_BATCH_SIZE
         self._load_model()
 
     def _load_model(self):
@@ -174,7 +174,7 @@ class AzureOpenAIEmbeddingProvider:
         try:
             embeddings = []
             # Process texts in batches for better performance
-            batch_size = batch_size or settings.EMBEDDING_BATCH_SIZE
+            batch_size = batch_size or settings.EMBEDDING_BULK_BATCH_SIZE
 
             for i in range(0, len(texts), batch_size):
                 batch_texts = texts[i:i + batch_size]
@@ -326,7 +326,7 @@ class EmbeddingService:
                 "success": True,
             }
 
-        bs = batch_size or settings.EMBEDDING_BATCH_SIZE
+        bs = batch_size or settings.EMBEDDING_BULK_BATCH_SIZE
         vs = vector_service or self.vector_service
 
         all_embeddings: list[list[float]] = []

@@ -41,11 +41,10 @@ class Settings:
     # Embedding settings
     EMBEDDING_PROVIDER: str = get_env("EMBEDDING_PROVIDER", "azure")
     EMBEDDING_DEVICE: str = get_env("EMBEDDING_DEVICE", "cpu")
-    EMBEDDING_BATCH_SIZE: int = get_env("EMBEDDING_BATCH_SIZE", 32)
+    EMBEDDING_BULK_BATCH_SIZE: int = get_env("EMBEDDING_BULK_BATCH_SIZE", 32)
 
     # Local embedding settings (for when EMBEDDING_PROVIDER=local)
-    LOCAL_EMBEDDING_MODEL: str = get_env("LOCAL_EMBEDDING_MODEL", "google/embeddinggemma-300m")
-    LOCAL_EMBEDDING_FALLBACK_MODEL: str = get_env("LOCAL_EMBEDDING_FALLBACK_MODEL", "intfloat/multilingual-e5-large")
+    LOCAL_EMBEDDING_MODEL: str = get_env("LOCAL_EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
     LOCAL_RERANK_MODEL: str = get_env("LOCAL_RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 
     # Cache directories for models
@@ -64,7 +63,7 @@ class Settings:
     # Daily start time in HH:MM (local time)
     SCHEDULED_INGESTION_TIME: str = get_env("SCHEDULED_INGESTION_TIME", "02:00")
     # Ingestion interval in hours
-    SCHEDULED_INGESTION_INTERVAL_HOURS: int = get_env("SCHEDULED_INGESTION_INTERVAL_HOURS", 24)
+    SCHEDULER_INTERVAL_HOURS: int = get_env("SCHEDULER_INTERVAL_HOURS", 24)
 
     # CORS settings
     CORS_ALLOW_ORIGINS: list[str] = get_env_list("CORS_ALLOW_ORIGINS", ["*"])

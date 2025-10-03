@@ -26,7 +26,7 @@ class SchedulerService:
         # Configuration
         self.schedule_enabled = getattr(settings, 'SCHEDULER_ENABLED', False)
         self.schedule_time = self._parse_schedule_time(getattr(settings, 'SCHEDULED_INGESTION_TIME', '02:00'))
-        self.schedule_interval_hours = getattr(settings, 'SCHEDULED_INGESTION_INTERVAL_HOURS', 24)
+        self.schedule_interval_hours = getattr(settings, 'SCHEDULER_INTERVAL_HOURS', 24)
 
         # Callbacks for notifications
         self.on_task_start: Callable | None = None
