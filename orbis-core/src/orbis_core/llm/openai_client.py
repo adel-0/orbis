@@ -36,7 +36,7 @@ def get_azure_openai_client(api_key: str, api_version: str, azure_endpoint: str)
 class OpenAIClientService:
     """Service wrapper for shared OpenAI client access"""
 
-    def __init__(self, api_key: str, api_version: str, azure_endpoint: str, deployment_name: str | None = None):
+    def __init__(self, api_key: str, api_version: str, azure_endpoint: str, deployment_name: str | None = None, model_name: str | None = None):
         """
         Initialize OpenAI client service.
 
@@ -44,12 +44,14 @@ class OpenAIClientService:
             api_key: Azure OpenAI API key
             api_version: Azure OpenAI API version
             azure_endpoint: Azure OpenAI endpoint URL
-            deployment_name: Optional deployment name
+            deployment_name: Optional deployment name (Azure-specific)
+            model_name: Optional model name (for tokenization)
         """
         self.api_key = api_key
         self.api_version = api_version
         self.azure_endpoint = azure_endpoint
         self.deployment_name = deployment_name
+        self.model_name = model_name or deployment_name  # Fallback to deployment_name if not provided
         self._client = None
 
     @property

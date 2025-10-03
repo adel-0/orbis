@@ -37,7 +37,8 @@ class WikiSummarizationService:
             api_key=settings.AZURE_OPENAI_API_KEY,
             api_version=settings.AZURE_OPENAI_API_VERSION,
             azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME
+            deployment_name=settings.AZURE_OPENAI_DEPLOYMENT_NAME,
+            model_name=settings.AZURE_OPENAI_MODEL
         )
         self.vector_service = vector_service
         self.embedding_service = embedding_service
@@ -264,7 +265,7 @@ class WikiSummarizationService:
             key_components = self._extract_key_components_from_llm_response(final_summary)
 
             # Estimate total tokens processed
-            total_tokens = sum(count_tokens(page['content'], self.deployment_name) for page in wiki_pages)
+            total_tokens = sum(count_tokens(page['content'], self.openai_client_service.model_name) for page in wiki_pages)
 
             return WikiSummary(
                 wiki_name=wiki_name,
@@ -339,7 +340,7 @@ class WikiSummarizationService:
 
             # Accurate token estimation using tiktoken
             formatted_content = f"## {page_title}\n{page_content}\n\n"
-            page_tokens = count_tokens(formatted_content, self.deployment_name)
+            page_tokens = count_tokens(formatted_content, self.openai_client_service.model_name)
 
             # Check if page alone exceeds safe limit
             if page_tokens > safe_input_limit:
@@ -386,7 +387,7 @@ class WikiSummarizationService:
         """Log statistics for each batch"""
         for i, batch in enumerate(batches):
             total_content = "\n\n".join(f"## {p.get('title', 'Untitled')}\n{p.get('content', '')}" for p in batch)
-            estimated_tokens = count_tokens(total_content, self.deployment_name)
+            estimated_tokens = count_tokens(total_content, self.openai_client_service.model_name)
             logger.info(f"Batch {i+1}: {len(batch)} pages, {estimated_tokens} tokens")
 
     async def _call_llm_for_summary(self, content: str, context: str, summary_type: str = "batch", is_final: bool = False) -> str | None:
@@ -452,7 +453,7 @@ class WikiSummarizationService:
             summary = response.choices[0].message.content
             if summary:
                 summary = summary.strip()
-                summary_tokens = count_tokens(summary, self.deployment_name)
+                summary_tokens = count_tokens(summary, self.openai_client_service.model_name)
                 logger.info(f"Generated {summary_type} summary for {context}: {summary_tokens} tokens")
                 self._log_summary_to_file(summary, context, f"{summary_type}_summary")
                 return summary
@@ -548,7 +549,7 @@ class WikiSummarizationService:
         current_tokens = 0
 
         for summary in summaries:
-            summary_tokens = count_tokens(summary, self.deployment_name)
+            summary_tokens = count_tokens(summary, self.openai_client_service.model_name)
 
             # If adding this summary would exceed the limit, start a new chunk
             if current_tokens + summary_tokens > token_limit and current_chunk:
