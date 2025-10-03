@@ -587,7 +587,6 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
 
                             content = await content_response.text()
                             if not content:
-                                logger.warning(f"Empty content for file {file_path}")
                                 continue
 
                             # Process the markdown content
