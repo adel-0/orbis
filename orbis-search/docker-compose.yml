@@ -1,14 +1,14 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: orbis-search/Dockerfile
     ports:
       - "${API_PORT}:7887"
     env_file:
       - .env
     volumes:
-      - app_data:/app/data
+      - app_data:/app/orbis-search/data
     restart: unless-stopped
     deploy:
       resources:
@@ -26,13 +26,13 @@ services:
 
   poller:
     build:
-      context: .
-      dockerfile: Dockerfile.poller
+      context: ..
+      dockerfile: orbis-search/Dockerfile.poller
     env_file:
       - .env
     volumes:
-      - app_data:/app/data
-      - ./poller.py:/app/poller.py:ro
+      - app_data:/app/orbis-search/data
+      - ./poller.py:/app/orbis-search/poller.py:ro
     restart: unless-stopped
     depends_on:
       - api
