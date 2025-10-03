@@ -513,6 +513,16 @@ class GenericMultiModalSearch:
 
             # Create appropriate content object based on source type
             if source_type == "azdo_workitems" or content_type == "work_item":
+                # Parse additional_fields if it's a JSON string
+                additional_fields = metadata.get("additional_fields", {})
+                if isinstance(additional_fields, str):
+                    import json
+                    try:
+                        additional_fields = json.loads(additional_fields)
+                    except json.JSONDecodeError:
+                        logger.warning(f"Failed to parse additional_fields JSON for {content_id}")
+                        additional_fields = {}
+
                 # Create a Ticket object
                 return Ticket(
                     id=content_id,
@@ -532,13 +542,18 @@ class GenericMultiModalSearch:
                     azure_resolved_date=metadata.get("azure_resolved_date"),
                     azure_url=metadata.get("azure_url"),
                     created_by=metadata.get("created_by"),
-                    additional_fields=metadata.get("additional_fields", {}),
+                    additional_fields=additional_fields,
                     source_name=metadata.get("source_name"),
                     organization=metadata.get("organization"),
                     project=metadata.get("project"),
                     source_type=source_type
                 )
             elif source_type == "azdo_wiki" or content_type == "wiki_page":
+                # Handle last_modified - convert empty strings to None
+                last_modified = metadata.get("last_modified")
+                if last_modified == "":
+                    last_modified = None
+
                 # Create a WikiPageContent object
                 return WikiPageContent(
                     id=content_id,
@@ -548,7 +563,7 @@ class GenericMultiModalSearch:
                     path=metadata.get("path", ""),
                     html_content=metadata.get("html_content"),
                     image_references=metadata.get("image_references", []),
-                    last_modified=metadata.get("last_modified"),
+                    last_modified=last_modified,
                     author=metadata.get("author"),
                     version=metadata.get("version"),
                     url=metadata.get("url"),

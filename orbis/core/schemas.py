@@ -92,6 +92,7 @@ class SearchResult(BaseModel):
     rerank_score: float | None = None
     normalized_score: float | None = None  # For cross-collection normalization
     context_score: float | None = None  # For context-aware scoring
+    final_score: float | None = None  # Final combined score after reranking and boosting
     content_type: str  # For easier handling in UI
     metadata: dict[str, Any] | None = Field(default_factory=dict)  # Additional metadata from vector DB
 
