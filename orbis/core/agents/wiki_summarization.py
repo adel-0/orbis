@@ -659,7 +659,7 @@ class WikiSummarizationService:
                         needs_refresh = await self._cache_needs_refresh(wiki_name, project_code)
 
                         if not needs_refresh:
-                            logger.debug(f"Wiki {wiki_name} cache is fresh, skipping")
+                            logger.info(f"✅ Wiki {wiki_name} cache is fresh, skipping regeneration")
                             results["cached"] += 1
                             project_results["wikis"].append({"wiki": wiki_name, "status": "cached"})
                             continue
@@ -717,8 +717,14 @@ class WikiSummarizationService:
 
                 # Check if cache is still fresh
                 refresh_threshold = datetime.now(timezone.utc) - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
-                if cache_entry.last_refreshed_at < refresh_threshold:
-                    logger.debug(f"Cache entry for {cache_key} is stale (last refreshed: {cache_entry.last_refreshed_at})")
+                last_refreshed = cache_entry.last_refreshed_at
+
+                # Handle timezone-naive datetimes (SQLite compatibility)
+                if last_refreshed.tzinfo is None:
+                    last_refreshed = last_refreshed.replace(tzinfo=timezone.utc)
+
+                if last_refreshed < refresh_threshold:
+                    logger.debug(f"Cache entry for {cache_key} is stale (last refreshed: {last_refreshed})")
                     return None
 
                 # Deserialize and return WikiSummary
@@ -743,7 +749,13 @@ class WikiSummarizationService:
 
                 # Check if cache is stale
                 refresh_threshold = datetime.now(timezone.utc) - timedelta(days=WIKI_CACHE_REFRESH_DAYS)
-                return cache_entry.last_refreshed_at < refresh_threshold
+                last_refreshed = cache_entry.last_refreshed_at
+
+                # Handle timezone-naive datetimes (SQLite compatibility)
+                if last_refreshed.tzinfo is None:
+                    last_refreshed = last_refreshed.replace(tzinfo=timezone.utc)
+
+                return last_refreshed < refresh_threshold
 
         except Exception as e:
             logger.error(f"Error checking cache refresh status for {wiki_name}: {e}")

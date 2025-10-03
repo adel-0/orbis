@@ -212,7 +212,16 @@ class QueryRoutingAgent:
                 response_format={"type": "json_object"}  # Ensure JSON output
             )
 
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+
+            # Log response metadata for debugging
+            if not content:
+                logger.warning("LLM returned None/empty content")
+                logger.debug(f"Response finish_reason: {response.choices[0].finish_reason}")
+                return ""
+
+            logger.debug(f"LLM response length: {len(content)} characters")
+            return content
 
         except Exception as e:
             logger.error(f"Failed to call Azure OpenAI via shared client: {e}")
@@ -280,10 +289,16 @@ class QueryRoutingAgent:
             # Get data sources dynamically from database
             data_sources = await self._get_data_source_profiles()
 
+            if not data_sources:
+                logger.warning("No data sources available for routing - database may be empty")
+                return []
+
+            logger.info(f"Routing with {len(data_sources)} available data sources")
+
             # Build dynamic data source list - let LLM understand from raw data
             available_sources = "\n".join([
                 f"- Name: {source.name}\n"
-                f"  Type: {source.source_type}\n" 
+                f"  Type: {source.source_type}\n"
                 f"  Description: {source.description}\n"
                 f"  Tags: [{', '.join(source.context_tags)}]\n"
                 f"  Priority: {source.priority}\n"
@@ -312,9 +327,20 @@ class QueryRoutingAgent:
     def _parse_detailed_structured_recommendations(self, llm_response: str, data_sources: list[DataSourceProfile]) -> list[DataSourceRecommendation]:
         """Parse detailed LLM recommendations using structured models"""
         try:
+            # Validate LLM response is not empty
+            if not llm_response or not llm_response.strip():
+                logger.warning("LLM returned empty response for routing recommendations")
+                return []
+
             # Parse JSON response directly as list of DataSourceRecommendation objects
             import json
-            response_data = json.loads(llm_response)
+
+            try:
+                response_data = json.loads(llm_response)
+            except json.JSONDecodeError as e:
+                logger.error(f"Invalid JSON from LLM: {e}")
+                logger.debug(f"LLM response content: {llm_response[:500]}")  # Log first 500 chars
+                return []
 
             # Handle both list format and object with 'recommendations' field
             if isinstance(response_data, list):
@@ -322,20 +348,26 @@ class QueryRoutingAgent:
             elif isinstance(response_data, dict) and 'recommendations' in response_data:
                 recommendations_data = response_data['recommendations']
             else:
-                recommendations_data = []
+                logger.warning(f"Unexpected LLM response structure: {type(response_data)}")
+                return []
 
             recommendations = []
             for rec_data in recommendations_data:
-                recommendation = DataSourceRecommendation.model_validate(rec_data)
-                recommendations.append(recommendation)
+                try:
+                    recommendation = DataSourceRecommendation.model_validate(rec_data)
+                    recommendations.append(recommendation)
+                except Exception as e:
+                    logger.warning(f"Skipping invalid recommendation: {e}")
+                    continue
 
             # Sort by relevance score
             recommendations.sort(key=lambda x: x.relevance_score, reverse=True)
+            logger.info(f"Parsed {len(recommendations)} routing recommendations")
             return recommendations
 
         except Exception as e:
             logger.error(f"Failed to parse detailed structured recommendations: {e}")
-            raise
+            return []  # Return empty list instead of raising
 
     async def generate_search_plan(self, query: str, project_context: str | None = None) -> SearchPlan:
         """Generate a comprehensive search plan with weights and filters"""

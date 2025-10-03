@@ -288,9 +288,12 @@ class WorkItemService:
                         logger.warning(f"Incremental sync failed: {str(e)}")
                         all_workitems = []
 
-                # Only fall back to full sync if incremental sync was not requested
-                # When incremental=True (force_full_sync=False), respect that choice
-                if not all_workitems and not incremental:
+                # Fall back to full sync if:
+                # 1. Full sync explicitly requested (incremental=False), OR
+                # 2. No items from incremental sync AND no last_sync_time (first run)
+                if not all_workitems and (not incremental or not last_sync_time):
+                    if not last_sync_time:
+                        logger.info("No last_sync_time found - performing initial full sync")
                     for query_id in query_ids:
                         try:
                             # Get work item IDs from query
