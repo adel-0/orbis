@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_scheduler_service, require_api_key
 from models.schemas import SchedulerStatusResponse, DataIngestionResponse
-from services.scheduler_service import SchedulerService
+from orbis_core.scheduling import SchedulerService
 
 logger = logging.getLogger(__name__)
 

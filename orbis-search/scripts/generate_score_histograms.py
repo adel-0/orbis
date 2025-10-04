@@ -37,7 +37,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.db.session import DatabaseManager
 from models.schemas import Ticket
-from services.hybrid_search_service import HybridSearchService
+from orbis_core.search import HybridSearchService
 from services.work_item_service import WorkItemService
 
 

@@ -5,7 +5,7 @@ from app.api.dependencies import get_embedding_service, get_vector_service, get_
 from models.schemas import EmbedRequest, EmbedResponse
 from services.embedding_service import EmbeddingService
 from services.vector_service import VectorService
-from services.bm25_service import BM25Service
+from orbis_core.search import BM25Service
 from services.work_item_service import WorkItemService
 
 logger = logging.getLogger(__name__)

@@ -12,9 +12,10 @@ from app.db.models import IngestionLog
 from app.db.session import get_db_session
 from services.data_source_service import DataSourceService
 from services.work_item_service import WorkItemService
-from services.azure_devops_client import AzureDevOpsClient
+from orbis_core.connectors.azure_devops import AzureDevOpsClient
 from services.embedding_service import EmbeddingService
 from services.vector_service import VectorService
+from orbis_core.search import BM25Service
 from models.schemas import Ticket
 
 logger = logging.getLogger(__name__)
@@ -23,10 +24,12 @@ logger = logging.getLogger(__name__)
 class DataIngestionService:
     """Service for ingesting work item data from Azure DevOps into SQLite database"""
     
-    def __init__(self, embedding_service: Optional[EmbeddingService] = None, 
-                 vector_service: Optional[VectorService] = None):
+    def __init__(self, embedding_service: Optional[EmbeddingService] = None,
+                 vector_service: Optional[VectorService] = None,
+                 bm25_service: Optional[BM25Service] = None):
         self.embedding_service = embedding_service
         self.vector_service = vector_service
+        self.bm25_service = bm25_service
         self.use_incremental_sync = True
     
     async def ingest_single_source(self, source_name: str, 
@@ -207,6 +210,18 @@ class DataIngestionService:
                         if tickets:
                             embedding_result = await self.embedding_service.generate_embeddings(tickets)
                             logger.info(f"Generated embeddings for {len(tickets)} tickets")
+
+                            # Also build BM25 index when doing embeddings
+                            if self.bm25_service:
+                                bm25_docs = []
+                                for ticket in tickets:
+                                    concatenated_text = self.vector_service._concatenate_ticket_text(ticket)
+                                    bm25_docs.append({
+                                        'ticket': ticket,
+                                        'concatenated_text': concatenated_text
+                                    })
+                                self.bm25_service.index_documents(bm25_docs, save_to_disk=True)
+                                logger.info(f"Indexed {len(tickets)} documents for BM25 search")
                     except Exception as e:
                         logger.error(f"Failed to generate embeddings: {e}")
                         embedding_result = {"error": str(e)}
@@ -283,6 +298,18 @@ class DataIngestionService:
                 if tickets:
                     embedding_result = await self.embedding_service.generate_embeddings(tickets)
                     logger.info(f"Generated embeddings for {len(tickets)} tickets")
+
+                    # Also build BM25 index when doing embeddings
+                    if self.bm25_service:
+                        bm25_docs = []
+                        for ticket in tickets:
+                            concatenated_text = self.vector_service._concatenate_ticket_text(ticket)
+                            bm25_docs.append({
+                                'ticket': ticket,
+                                'concatenated_text': concatenated_text
+                            })
+                        self.bm25_service.index_documents(bm25_docs, save_to_disk=True)
+                        logger.info(f"Indexed {len(tickets)} documents for BM25 search")
             except Exception as e:
                 logger.error(f"Failed to generate embeddings: {e}")
                 embedding_result = {"error": str(e)}
@@ -302,10 +329,20 @@ class DataIngestionService:
             "timestamp": end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "embedding_result": embedding_result
         }
-    
-    # Note: legacy ingest_all_sources method was removed as dead code. The new unified
-    # ingest_workitems() handles both single and multi-source scenarios.
-    
+
+    async def ingest_all_sources(self, force_full_sync: bool = False,
+                                skip_embedding: bool = False,
+                                **kwargs: Any) -> Dict[str, Any]:
+        """
+        Alias for ingest_workitems() to maintain compatibility with orbis-core SchedulerService.
+        Ingests from all enabled sources.
+        """
+        return await self.ingest_workitems(
+            force_full_sync=force_full_sync,
+            skip_embedding=skip_embedding,
+            source_names=None  # None = all enabled sources
+        )
+
     def get_ingestion_status(self, source_name: Optional[str] = None) -> Dict[str, Any]:
         """Get unified ingestion status (single or multi-source format)"""
         

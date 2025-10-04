@@ -92,6 +92,29 @@ class AzureDevOpsClient(AzureDevOpsAuthMixin):
         else:
             raise ValueError(f"Unsupported authentication type: {auth_type}")
 
+    @classmethod
+    def from_data_source(cls, data_source: Any) -> 'AzureDevOpsClient':
+        """Create an AzureDevOpsClient from a DataSource model object"""
+        auth_type = getattr(data_source, 'auth_type', 'pat')
+        if auth_type == "pat":
+            return cls(
+                organization=data_source.organization,
+                project=data_source.project,
+                auth_token=data_source.pat,
+                use_oauth2=False
+            )
+        elif auth_type == "oauth2":
+            return cls(
+                organization=data_source.organization,
+                project=data_source.project,
+                client_id=data_source.client_id,
+                client_secret=data_source.client_secret,
+                tenant_id=data_source.tenant_id,
+                use_oauth2=True
+            )
+        else:
+            raise ValueError(f"Unsupported authentication type: {auth_type}")
+
     def get_encoded_project_path(self) -> str:
         """Get URL-encoded project path"""
         return quote(self.project)

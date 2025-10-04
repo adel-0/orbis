@@ -5,11 +5,9 @@ from services.embedding_service import EmbeddingService
 from services.vector_service import VectorService
 from services.summary_service import SummaryService
 from services.data_ingestion_service import DataIngestionService
-from services.scheduler_service import SchedulerService
 from services.service_container import ServiceContainer
-from services.rerank_service import RerankService
-from services.bm25_service import BM25Service
-from services.hybrid_search_service import HybridSearchService
+from orbis_core.search import RerankService, BM25Service, HybridSearchService
+from orbis_core.scheduling import SchedulerService
 
 
 def get_container(request: Request) -> ServiceContainer:

@@ -511,17 +511,21 @@ Please review the source references provided with this response for relevant doc
                 url = self._generate_workitem_url_from_metadata(metadata)
                 if url:
                     return url
+                else:
+                    logger.debug(f"Failed to generate workitem URL - metadata: org={metadata.get('organization')}, project={metadata.get('project')}, id={metadata.get('id') or metadata.get('content_id')}")
             elif source_type in ['azdo_wiki', 'project_wiki', 'wiki']:
                 url = self._generate_wiki_url_from_metadata(metadata)
                 if url:
                     return url
+                else:
+                    logger.debug(f"Failed to generate wiki URL - metadata: org={metadata.get('organization')}, project={metadata.get('project')}, path={metadata.get('path')}")
             else:
                 # Generic URL construction
                 if 'url' in metadata:
                     return metadata['url']
 
         except Exception as e:
-            logger.debug(f"Error generating URL for {source_type}: {e}")
+            logger.warning(f"Error generating URL for {source_type}: {e}")
 
         return None
 

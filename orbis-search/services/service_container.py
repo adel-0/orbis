@@ -10,11 +10,9 @@ from datetime import datetime
 from services.embedding_service import EmbeddingService
 from services.vector_service import VectorService
 from services.summary_service import SummaryService
-from services.rerank_service import RerankService
-from services.bm25_service import BM25Service
-from services.hybrid_search_service import HybridSearchService
 from services.data_ingestion_service import DataIngestionService
-from services.scheduler_service import SchedulerService
+from orbis_core.search import RerankService, BM25Service, HybridSearchService
+from orbis_core.scheduling import SchedulerService
 from models.schemas import HealthResponse
 from config import settings
 
@@ -72,15 +70,21 @@ class ServiceContainer:
             # Initialize services that depend on core services
             self.data_ingestion_service = DataIngestionService(
                 embedding_service=self.embedding_service,
-                vector_service=self.vector_service
+                vector_service=self.vector_service,
+                bm25_service=self.bm25_service
             )
             logger.info("Data ingestion service initialized")
 
             # Attach vector service to embedding service for convenience methods
             self.embedding_service.vector_service = self.vector_service
-            
-            self.scheduler_service = SchedulerService(self.data_ingestion_service)
-            
+
+            self.scheduler_service = SchedulerService(
+                data_ingestion_service=self.data_ingestion_service,
+                schedule_enabled=settings.SCHEDULER_ENABLED,
+                schedule_time=settings.SCHEDULED_INGESTION_TIME,
+                schedule_interval_hours=settings.SCHEDULED_INGESTION_INTERVAL_HOURS
+            )
+
             # Set up scheduler callbacks for logging
             def log_scheduler_event(event_data):
                 logger.info(f"Scheduler event: {event_data}")

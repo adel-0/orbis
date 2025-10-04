@@ -14,9 +14,7 @@ from models.schemas import SearchRequest, SearchResponse
 from services.embedding_service import EmbeddingService
 from services.vector_service import VectorService
 from services.summary_service import SummaryService
-from services.rerank_service import RerankService
-from services.bm25_service import BM25Service
-from services.hybrid_search_service import HybridSearchService
+from orbis_core.search import RerankService, BM25Service, HybridSearchService
 
 logger = logging.getLogger(__name__)
 

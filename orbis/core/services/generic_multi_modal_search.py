@@ -523,7 +523,30 @@ class GenericMultiModalSearch:
                         logger.warning(f"Failed to parse additional_fields JSON for {content_id}")
                         additional_fields = {}
 
-                # Create a Ticket object
+                # Put all Azure DevOps-specific fields into additional_fields
+                if not additional_fields:
+                    additional_fields = {}
+
+                # Add Azure DevOps fields to additional_fields if not already there
+                azdo_fields = {
+                    "state": metadata.get("state"),
+                    "assigned_to": metadata.get("assigned_to"),
+                    "work_item_type": metadata.get("work_item_type"),
+                    "priority": metadata.get("priority"),
+                    "severity": metadata.get("severity"),
+                    "tags": metadata.get("tags", []),
+                    "azure_created_date": metadata.get("azure_created_date"),
+                    "azure_changed_date": metadata.get("azure_changed_date"),
+                    "azure_resolved_date": metadata.get("azure_resolved_date"),
+                    "azure_url": metadata.get("azure_url"),
+                    "created_by": metadata.get("created_by")
+                }
+                # Only add non-None values
+                for key, value in azdo_fields.items():
+                    if value is not None and key not in additional_fields:
+                        additional_fields[key] = value
+
+                # Create a Ticket object with only schema-compliant fields
                 return Ticket(
                     id=content_id,
                     title=title,
@@ -531,17 +554,6 @@ class GenericMultiModalSearch:
                     description=metadata.get("description", ""),
                     comments=metadata.get("comments", []),
                     area_path=metadata.get("area_path"),
-                    state=metadata.get("state"),
-                    assigned_to=metadata.get("assigned_to"),
-                    work_item_type=metadata.get("work_item_type"),
-                    priority=metadata.get("priority"),
-                    severity=metadata.get("severity"),
-                    tags=metadata.get("tags", []),
-                    azure_created_date=metadata.get("azure_created_date"),
-                    azure_changed_date=metadata.get("azure_changed_date"),
-                    azure_resolved_date=metadata.get("azure_resolved_date"),
-                    azure_url=metadata.get("azure_url"),
-                    created_by=metadata.get("created_by"),
                     additional_fields=additional_fields,
                     source_name=metadata.get("source_name"),
                     organization=metadata.get("organization"),
@@ -554,7 +566,7 @@ class GenericMultiModalSearch:
                 if last_modified == "":
                     last_modified = None
 
-                # Create a WikiPageContent object
+                # Create a WikiPageContent object with only schema-compliant fields
                 return WikiPageContent(
                     id=content_id,
                     title=title,
@@ -565,8 +577,6 @@ class GenericMultiModalSearch:
                     image_references=metadata.get("image_references", []),
                     last_modified=last_modified,
                     author=metadata.get("author"),
-                    version=metadata.get("version"),
-                    url=metadata.get("url"),
                     source_name=metadata.get("source_name"),
                     organization=metadata.get("organization"),
                     project=metadata.get("project"),
@@ -585,13 +595,20 @@ class GenericMultiModalSearch:
                 )
 
         except Exception as e:
+            import traceback
             logger.error(f"Error creating content object for {source_type}: {e}")
-            # Return a minimal BaseContent as fallback
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            logger.debug(f"Item metadata keys: {list(item.get('metadata', {}).keys())}")
+            # Return a minimal BaseContent as fallback but preserve metadata fields for URL generation
+            metadata = item.get("metadata", {})
             return BaseContent(
-                id=item.get("metadata", {}).get("id", "unknown"),
-                title=item.get("metadata", {}).get("title", "Error parsing content"),
+                id=metadata.get("id", "unknown"),
+                title=metadata.get("title", "Error parsing content"),
                 content_type="error",
-                source_type=source_type
+                source_type=source_type,
+                source_name=metadata.get("source_name"),
+                organization=metadata.get("organization"),
+                project=metadata.get("project")
             )
 
     async def search_collections(self, query: str,

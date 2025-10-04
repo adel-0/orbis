@@ -44,7 +44,7 @@ from pathlib import Path
 
 import aiohttp
 
-from services.azure_devops_client import AzureDevOpsClient
+from orbis_core.connectors.azure_devops import AzureDevOpsClient
 from models.schemas import Ticket
 
 
