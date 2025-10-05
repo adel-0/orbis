@@ -29,7 +29,7 @@ class Settings:
     AZURE_OPENAI_ENDPOINT: str = get_env("AZURE_OPENAI_ENDPOINT", "")
     AZURE_OPENAI_API_KEY: str = get_env("AZURE_OPENAI_API_KEY", "")
     AZURE_OPENAI_MODEL: str = get_env("AZURE_OPENAI_MODEL", "gpt-5-mini")
-    AZURE_OPENAI_API_VERSION: str = get_env("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+    AZURE_OPENAI_API_VERSION: str = get_env("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
     AZURE_OPENAI_DEPLOYMENT_NAME: str = get_env("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-5-mini")
 
     # Embedding settings

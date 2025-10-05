@@ -566,6 +566,16 @@ class GenericMultiModalSearch:
                 if last_modified == "":
                     last_modified = None
 
+                # Parse image_references if it's a JSON string
+                image_references = metadata.get("image_references", [])
+                if isinstance(image_references, str):
+                    import json
+                    try:
+                        image_references = json.loads(image_references)
+                    except json.JSONDecodeError:
+                        logger.warning(f"Failed to parse image_references JSON for {content_id}")
+                        image_references = []
+
                 # Create a WikiPageContent object with only schema-compliant fields
                 return WikiPageContent(
                     id=content_id,
@@ -574,7 +584,7 @@ class GenericMultiModalSearch:
                     content=metadata.get("content", ""),
                     path=metadata.get("path", ""),
                     html_content=metadata.get("html_content"),
-                    image_references=metadata.get("image_references", []),
+                    image_references=image_references,
                     last_modified=last_modified,
                     author=metadata.get("author"),
                     source_name=metadata.get("source_name"),

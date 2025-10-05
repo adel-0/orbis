@@ -60,7 +60,7 @@ WIKI_CACHE_REFRESH_DAYS: int = 30  # Refresh wiki summaries every 30 days
 WIKI_CACHE_STARTUP_TIMEOUT_MINUTES: int = 10  # Maximum time to spend on startup pre-computation
 
 # LLM token limits
-LLM_MAX_OUTPUT_TOKENS: int = 2000  # Maximum tokens for LLM response generation
+LLM_MAX_OUTPUT_TOKENS: int = 16000  # Maximum tokens for LLM response generation (includes reasoning tokens for models like o1/o3)
 
 # Rerank service
 DEFAULT_RERANK_MODEL: str = "BAAI/bge-reranker-v2-m3"
