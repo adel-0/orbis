@@ -33,6 +33,11 @@ class WorkItemService:
 
         self.content_service = GenericContentService(self.db)
 
+    @classmethod
+    def get_collection_name(cls) -> str:
+        """Return the ChromaDB collection name for work items"""
+        return "workitems_collection"
+
     def __enter__(self):
         return self
 
@@ -339,7 +344,17 @@ class WorkItemService:
         return " ".join(parts)
 
     def get_metadata(self, work_item: dict) -> dict[str, Any]:
-        """Return metadata that should be stored for filtering/display"""
+        """
+        Return metadata that should be stored for filtering/display.
+
+        MANDATORY FIELDS:
+        - title: Work item title
+        - content: Work item description
+        - source_reference: Azure DevOps URL
+
+        OPTIONAL FIELDS:
+        - Connector-specific fields for filtering/display
+        """
 
         def extract_user_display_name(user_data):
             if isinstance(user_data, dict):
@@ -349,7 +364,15 @@ class WorkItemService:
             else:
                 return ''
 
+        # MANDATORY FIELDS - all connectors must provide these
         metadata = {
+            'title': work_item.get('Title', '') or work_item.get('title', ''),
+            'content': work_item.get('Description', '') or work_item.get('description', ''),
+            'source_reference': work_item.get('url', ''),
+        }
+
+        # CONNECTOR-SPECIFIC FIELDS
+        metadata.update({
             'area_path': work_item.get('AreaPath', ''),
             'state': work_item.get('State', ''),
             'assigned_to': extract_user_display_name(work_item.get('AssignedTo', '')),
@@ -361,8 +384,7 @@ class WorkItemService:
             'azure_created_date': work_item.get('CreatedDate', ''),
             'azure_changed_date': work_item.get('ChangedDate', ''),
             'azure_resolved_date': work_item.get('ResolvedDate', ''),
-            'azure_url': work_item.get('url', '')
-        }
+        })
 
         # Include any additional fields that don't fit the standard schema
         standard_fields = {

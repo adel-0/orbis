@@ -162,8 +162,9 @@ class DocumentationAggregator:
         # Process results by source type
         for source_type, results in search_results.results_by_source_type.items():
             for result in results[:self.config["max_sources_per_type"]]:
-                # Extract title from content or metadata
-                title = self._extract_title(result)
+                # Extract title and URL directly from metadata (set by connector)
+                title = result.metadata.get('title', '') or self._extract_title(result)
+                url = result.metadata.get('source_reference', '')
 
                 source_dict = {
                     "type": source_type,
@@ -172,7 +173,7 @@ class DocumentationAggregator:
                     "score": getattr(result, 'rerank_score', None) or result.similarity_score,
                     "source_name": result.metadata.get('source_name', 'Unknown'),
                     "id": self._extract_content_id(result),
-                    "url": self._generate_generic_url(result, source_type),
+                    "url": url,
                     "metadata": result.metadata
                 }
                 all_sources.append(source_dict)
@@ -180,7 +181,8 @@ class DocumentationAggregator:
         # Also include reranked results if available (these are cross-collection ranked)
         if search_results.reranked_results:
             for result in search_results.reranked_results:
-                title = self._extract_title(result)
+                title = result.metadata.get('title', '') or self._extract_title(result)
+                url = result.metadata.get('source_reference', '')
                 source_type = getattr(result, 'content_type', 'unknown')
 
                 source_dict = {
@@ -190,7 +192,7 @@ class DocumentationAggregator:
                     "score": getattr(result, 'rerank_score', None) or result.similarity_score,
                     "source_name": result.metadata.get('source_name', 'Unknown'),
                     "id": self._extract_content_id(result),
-                    "url": self._generate_generic_url(result, source_type),
+                    "url": url,
                     "metadata": result.metadata,
                     "is_reranked": True
                 }

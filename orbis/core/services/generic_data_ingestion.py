@@ -48,7 +48,7 @@ class GenericDataIngestionService:
         start_time = datetime.now(UTC)
 
         try:
-            # Get data source configuration
+            # Get connector configuration for dynamic import
             ds_config = get_data_source_config(source_type)
 
             # Dynamic import of connector
@@ -57,6 +57,9 @@ class GenericDataIngestionService:
 
             # Create connector instance
             connector = connector_class()
+
+            # Get collection name from connector (self-describing)
+            collection_name = connector_class.get_collection_name()
 
             # Fetch raw data using connector
             logger.info(f"Fetching data from {source_name} (type: {source_type})")
@@ -69,6 +72,14 @@ class GenericDataIngestionService:
                 searchable_text = self._get_searchable_text(connector, item)
                 metadata = self._get_metadata(connector, item)
                 content_id = self._get_content_id(connector, item)
+
+                # Enrich metadata with DataSource instance information
+                metadata['source_name'] = source_name
+                metadata['source_type'] = source_type
+                if 'organization' in source_config:
+                    metadata['organization'] = source_config['organization']
+                if 'project' in source_config:
+                    metadata['project'] = source_config['project']
 
                 content_items.append({
                     "id": content_id,
@@ -85,7 +96,7 @@ class GenericDataIngestionService:
             embedding_result = None
             if self.embedding_service and self.vector_service:
                 embedding_result = await self._generate_embeddings(
-                    content_items, ds_config["collection_name"]
+                    content_items, collection_name
                 )
 
             execution_time = (datetime.now(UTC) - start_time).total_seconds()
@@ -95,7 +106,7 @@ class GenericDataIngestionService:
                 "processed": len(content_items),
                 "source_type": source_type,
                 "source_name": source_name,
-                "collection": ds_config["collection_name"],
+                "collection": collection_name,
                 "execution_time_seconds": execution_time,
                 "embedding_result": embedding_result,
                 "timestamp": datetime.now(UTC).isoformat()

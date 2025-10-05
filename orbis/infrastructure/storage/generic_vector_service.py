@@ -540,15 +540,28 @@ class GenericVectorService:
                         if hasattr(item, "project") and item.project:
                             metadata["project"] = item.project
 
-                # Add system metadata
-                metadata.update({
+                # Ensure mandatory fields from metadata are preserved
+                # These come from the connector's get_metadata() and enrichment in ingestion
+                if "title" not in metadata or not metadata["title"]:
+                    metadata["title"] = safe_get(item, "title", "")
+                if "content" not in metadata or not metadata["content"]:
+                    metadata["content"] = safe_get(item, "content", "")
+                if "source_reference" not in metadata or not metadata["source_reference"]:
+                    metadata["source_reference"] = safe_get(item, "source_reference", "")
+
+                # Add system metadata (without overwriting mandatory fields)
+                system_metadata = {
                     "content_id": item_id,  # Already the corrected ID
                     "original_id": safe_get(item, "id"),  # Keep track of original ID
                     "concatenated_text": item_text,
                     "source_type": safe_get(item, "source_type", "unknown"),
                     "source_name": safe_get(item, "source_name", "unknown"),
                     "ingestion_timestamp": datetime.now().isoformat()
-                })
+                }
+                # Only add system metadata if it doesn't overwrite existing fields
+                for key, value in system_metadata.items():
+                    if key not in metadata:
+                        metadata[key] = value
 
                 # Ensure all metadata values are JSON serializable strings
                 cleaned_metadata = {}

@@ -17,6 +17,11 @@ class WikiService:
     def __init__(self):
         self.integrator = None
 
+    @classmethod
+    def get_collection_name(cls) -> str:
+        """Return the ChromaDB collection name for wiki pages"""
+        return "wiki_collection"
+
     async def fetch_data(self, config: dict[str, Any], incremental: bool = True) -> list[dict[str, Any]]:
         """
         Fetch wiki pages using configuration parameters.
@@ -208,12 +213,30 @@ class WikiService:
         return " ".join(parts)
 
     def get_metadata(self, wiki_item: dict) -> dict[str, Any]:
-        """Return metadata that should be stored for filtering/display"""
+        """
+        Return metadata that should be stored for filtering/display.
+
+        MANDATORY FIELDS:
+        - title: Wiki page title
+        - content: Wiki page markdown content
+        - source_reference: Git-based wiki URL
+
+        OPTIONAL FIELDS:
+        - Connector-specific fields for filtering/display
+        """
 
         source_metadata = wiki_item.get('source_metadata', {})
         extracted_metadata = wiki_item.get('extracted_metadata', {})
 
+        # MANDATORY FIELDS - all connectors must provide these
         metadata = {
+            'title': wiki_item.get('title', ''),
+            'content': wiki_item.get('content', ''),
+            'source_reference': wiki_item.get('url', '') or source_metadata.get('url', ''),
+        }
+
+        # CONNECTOR-SPECIFIC FIELDS
+        metadata.update({
             'content_type': wiki_item.get('content_type', 'wiki_page'),
             'path': source_metadata.get('path', ''),
             'wiki_name': source_metadata.get('wiki_name', ''),
@@ -222,7 +245,7 @@ class WikiService:
             'last_modified': self._format_datetime(wiki_item.get('last_modified')),
             'content_length': extracted_metadata.get('content_length', 0),
             'image_count': extracted_metadata.get('image_count', 0)
-        }
+        })
 
         # Add image references if available
         image_references = source_metadata.get('image_references', [])

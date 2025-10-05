@@ -13,29 +13,73 @@ class ConnectorInterface:
     def __init__(self):
         """Initialize connector (usually lightweight, no external connections)"""
         pass
-        
+
+    @classmethod
+    def get_collection_name(cls) -> str:
+        """
+        Return the ChromaDB collection name for this connector.
+        This enables self-describing connectors without external configuration.
+
+        Returns:
+            Collection name string (e.g., "workitems_collection", "wiki_collection")
+        """
+        pass
+
     async def fetch_data(self, config: dict[str, Any], incremental: bool = True) -> list[dict[str, Any]]:
         """
         Fetch data from external system using provided configuration.
-        
+
         Args:
             config: Configuration dictionary containing all connection/query parameters
             incremental: Whether to fetch only new/updated items since last sync
-            
+
         Returns:
             List of raw data items from external system
         """
         pass
-        
+
     def get_content_id(self, item: dict) -> str:
         """
         Extract unique identifier from a data item.
-        
+
         Args:
             item: Raw data item from external system
-            
+
         Returns:
             Unique string identifier for the item
+        """
+        pass
+
+    def get_searchable_text(self, item: dict) -> str:
+        """
+        Build searchable text from item for embedding and vector search.
+        Concatenate all searchable fields (title, content, comments, etc.).
+
+        Args:
+            item: Raw data item from external system
+
+        Returns:
+            Concatenated searchable text
+        """
+        pass
+
+    def get_metadata(self, item: dict) -> dict[str, Any]:
+        """
+        Extract metadata from item for storage and filtering.
+
+        MANDATORY FIELDS (all connectors must return these):
+        - title: str - Human-readable title
+        - content: str - Main content/description
+        - source_reference: str - URL, file path, or other reference to original item
+
+        OPTIONAL FIELDS (connector-specific):
+        - Any additional fields needed for filtering or display
+
+        Args:
+            item: Raw data item from external system
+
+        Returns:
+            Dictionary with title, content, source_reference, and connector-specific fields
         """
         pass
 ```

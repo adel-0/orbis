@@ -25,6 +25,11 @@ class OnCallWebHelpService:
         """Lightweight initialization - no external connections."""
         pass
 
+    @classmethod
+    def get_collection_name(cls) -> str:
+        """Return the ChromaDB collection name for OnCall Web Help"""
+        return "oncall_web_help_collection"
+
     async def fetch_data(self, config: dict[str, Any], incremental: bool = True) -> list[dict[str, Any]]:
         """
         Fetch HTML help files from local filesystem using provided configuration.
@@ -84,29 +89,91 @@ class OnCallWebHelpService:
     def get_content_id(self, item: dict) -> str:
         """
         Extract unique identifier from HTML help item.
-        
+
         Args:
             item: Raw HTML file dictionary
-            
+
         Returns:
             Unique string identifier for the item
         """
         # Use relative file path as the primary identifier
-        file_path = item.get('file_path', '')
+        source_metadata = item.get('source_metadata', {})
+        file_path = source_metadata.get('file_path', '')
         if file_path:
             # Create a stable ID from the relative path
-            relative_path = item.get('relative_path', file_path)
+            relative_path = source_metadata.get('relative_path', file_path)
             return f"oncall_web_help_{hashlib.md5(relative_path.encode()).hexdigest()[:12]}"
-        
+
         # Fallback to title-based ID
         title = item.get('title', '')
         if title:
             return f"oncall_web_help_title_{hashlib.md5(title.encode()).hexdigest()[:12]}"
-        
+
         # Last resort: content hash
         content = item.get('content', '')
         content_hash = hashlib.md5(content.encode()).hexdigest()[:12]
         return f"oncall_web_help_content_{content_hash}"
+
+    def get_searchable_text(self, item: dict) -> str:
+        """
+        Build searchable text from HTML help item for embedding and vector search.
+
+        Args:
+            item: Raw HTML help file dictionary
+
+        Returns:
+            Concatenated searchable text (title + content)
+        """
+        parts = []
+
+        # Add title
+        title = item.get('title', '')
+        if title:
+            parts.append(str(title))
+
+        # Add text content
+        content = item.get('content', '')
+        if content:
+            parts.append(str(content))
+
+        return " ".join(parts)
+
+    def get_metadata(self, item: dict) -> dict[str, Any]:
+        """
+        Extract metadata from HTML help item for storage and filtering.
+
+        MANDATORY FIELDS:
+        - title: HTML page title
+        - content: Extracted text content
+        - source_reference: File path on server
+
+        OPTIONAL FIELDS:
+        - Connector-specific fields for filtering/display
+        """
+        source_metadata = item.get('source_metadata', {})
+        extracted_metadata = item.get('extracted_metadata', {})
+
+        # MANDATORY FIELDS - all connectors must provide these
+        metadata = {
+            'title': item.get('title', ''),
+            'content': item.get('content', ''),
+            'source_reference': source_metadata.get('file_path', ''),
+        }
+
+        # CONNECTOR-SPECIFIC FIELDS
+        metadata.update({
+            'content_type': item.get('content_type', 'oncall_web_help'),
+            'relative_path': source_metadata.get('relative_path', ''),
+            'file_size': source_metadata.get('file_size', 0),
+            'modified_timestamp': source_metadata.get('modified_timestamp'),
+            'html_modified_date': source_metadata.get('html_modified_date'),
+            'content_length': extracted_metadata.get('content_length', 0),
+            'html_size': extracted_metadata.get('html_size', 0),
+            'author': item.get('author', 'system'),
+            'last_modified': item.get('last_modified', ''),
+        })
+
+        return metadata
 
     def get_last_modified(self, item: dict) -> datetime | None:
         """

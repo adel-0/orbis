@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session, joinedload
 from app.db.models import Content as ContentModel
 from app.db.models import DataSource
 from app.db.session import get_db_session
-from core.config.data_sources import DataSourceConfig, DataSourceConfigRegistry
 from core.schemas import BaseContent, Ticket, WikiPageContent
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ class GenericContentService:
     def __init__(self, db: Session | None = None):
         self.db = db
         self._should_close_db = False
-        self.config_registry = DataSourceConfigRegistry()
 
         if self.db is None:
             self.db = get_db_session()
@@ -36,18 +34,6 @@ class GenericContentService:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._should_close_db and self.db:
             self.db.close()
-
-    def _get_data_source_config(self, data_source_id: int) -> DataSourceConfig | None:
-        """Get configuration for a data source by ID"""
-        data_source = self.db.query(DataSource).filter(DataSource.id == data_source_id).first()
-        if not data_source:
-            return None
-
-        try:
-            return self.config_registry.get_source_config(data_source.source_type)
-        except ValueError:
-            # Unknown source type - will use generic handling
-            return None
 
     def create_or_update_content(self, external_id: str, data_source_id: int,
                                content_type: str, content_data: dict[str, Any],
@@ -95,54 +81,18 @@ class GenericContentService:
 
     def _create_content_from_data(self, external_id: str, data_source_id: int,
                                 content_type: str, data: dict[str, Any]) -> ContentModel:
-        """Create ContentModel from raw data using configuration-driven mapping"""
-
-        config = self._get_data_source_config(data_source_id)
-        if config and config.field_mappings:
-            return self._create_configured_content(external_id, data_source_id, content_type, data, config)
-        else:
-            # Generic content creation for unknown types or unconfigured sources
-            return self._create_generic_content(external_id, data_source_id, content_type, data)
-
-    def _create_configured_content(self, external_id: str, data_source_id: int, content_type: str,
-                                 data: dict[str, Any], config: DataSourceConfig) -> ContentModel:
-        """Create ContentModel using configuration-driven field mappings"""
-
-        # Map standard fields using configuration
-        field_mappings = config.field_mappings
-        title = data.get(field_mappings.get("title", "title"), "")
-        content = data.get(field_mappings.get("content", "content"), "")
-
-        # Build metadata from configured fields
-        metadata = {}
-        for field in config.metadata_fields or []:
-            if field in data:
-                metadata[field] = data[field]
-
-        return ContentModel(
-            external_id=str(external_id),
-            data_source_id=data_source_id,
-            content_type=content_type,
-            title=title,
-            content=content,
-            content_metadata=metadata,
-            source_created_date=data.get(field_mappings.get("created_date")),
-            source_updated_date=data.get(field_mappings.get("updated_date")),
-            source_reference=data.get(field_mappings.get("reference"))
-        )
-
-
-
-    def _create_generic_content(self, external_id: str, data_source_id: int,
-                              content_type: str, data: dict[str, Any]) -> ContentModel:
-        """Create ContentModel for unknown content types"""
-        # Extract common fields, put everything else in metadata
+        """
+        Create ContentModel from data.
+        Expects data to already have proper field names (title, content, etc.)
+        as connectors handle their own metadata extraction.
+        """
+        # Extract standard fields
         title = data.get("title") or data.get("name") or data.get("subject") or str(external_id)
         content = data.get("content") or data.get("body") or data.get("description") or ""
 
-        # Remove common fields from metadata
+        # All other fields go into metadata
         metadata = {k: v for k, v in data.items()
-                   if k not in ["title", "content", "created_date", "updated_date", "url"]}
+                   if k not in ["title", "content", "created_date", "updated_date", "url", "reference", "source_reference"]}
 
         return ContentModel(
             external_id=str(external_id),
@@ -153,60 +103,25 @@ class GenericContentService:
             content_metadata=metadata,
             source_created_date=data.get("created_date"),
             source_updated_date=data.get("updated_date"),
-            source_reference=data.get("url") or data.get("path") or data.get("reference")
+            source_reference=data.get("source_reference") or data.get("url") or data.get("path") or data.get("reference")
         )
 
     def _update_content_from_data(self, content: ContentModel, data: dict[str, Any], content_type: str) -> ContentModel:
-        """Update existing ContentModel with new data using configuration-driven mapping"""
-
-        config = self._get_data_source_config(content.data_source_id)
-        if config and config.field_mappings:
-            return self._update_configured_content(content, data, config)
-        else:
-            return self._update_generic_content(content, data)
-
-    def _update_configured_content(self, content: ContentModel, data: dict[str, Any], config: DataSourceConfig) -> ContentModel:
-        """Update ContentModel using configuration-driven field mappings"""
-
-        field_mappings = config.field_mappings
-
+        """
+        Update existing ContentModel with new data.
+        Expects data to already have proper field names as connectors handle extraction.
+        """
         # Update standard fields
-        if field_mappings.get("title") and field_mappings["title"] in data:
-            content.title = data[field_mappings["title"]]
-
-        if field_mappings.get("content") and field_mappings["content"] in data:
-            content.content = data[field_mappings["content"]]
-
-        if field_mappings.get("updated_date") and field_mappings["updated_date"] in data:
-            content.source_updated_date = data[field_mappings["updated_date"]]
-
-        if field_mappings.get("reference") and field_mappings["reference"] in data:
-            content.source_reference = data[field_mappings["reference"]]
-
-        # Update metadata
-        metadata = content.content_metadata or {}
-        for field in config.metadata_fields or []:
-            if field in data:
-                metadata[field] = data[field]
-
-        content.content_metadata = metadata
-        content.updated_at = datetime.utcnow()
-
-        return content
-
-
-
-    def _update_generic_content(self, content: ContentModel, data: dict[str, Any]) -> ContentModel:
-        """Update generic content"""
         content.title = data.get("title") or data.get("name") or data.get("subject") or content.title
         content.content = data.get("content") or data.get("body") or data.get("description") or content.content
         content.source_updated_date = data.get("updated_date", content.source_updated_date)
-        content.source_reference = data.get("url") or data.get("path") or data.get("reference") or content.source_reference
+        content.source_reference = (data.get("source_reference") or data.get("url") or
+                                   data.get("path") or data.get("reference") or content.source_reference)
 
-        # Update metadata with all fields
+        # Update metadata with all fields (excluding standard fields)
         metadata = content.content_metadata or {}
         new_metadata = {k: v for k, v in data.items()
-                       if k not in ["title", "content", "created_date", "updated_date", "url"]}
+                       if k not in ["title", "content", "created_date", "updated_date", "url", "reference", "source_reference"]}
         metadata.update(new_metadata)
         content.content_metadata = metadata
         content.updated_at = datetime.utcnow()
@@ -258,28 +173,20 @@ class GenericContentService:
 
         content_models = query.all()
 
-        # Convert to BaseContent format for embedding service
+        # Convert to BaseContent format based on content_type
         base_contents = []
         for content in content_models:
-            config = self._get_data_source_config(content.data_source_id)
-            if config and config.schema_class:
-                base_content = self._convert_using_config(content, config)
+            # Determine conversion based on content_type
+            if content.content_type == "work_item":
+                base_content = self._convert_to_ticket(content)
+            elif content.content_type in ["wiki_page", "wiki"]:
+                base_content = self._convert_to_wiki_page_content(content)
             else:
                 base_content = self._convert_to_base_content(content)
 
             base_contents.append(base_content)
 
         return base_contents
-
-    def _convert_using_config(self, content: ContentModel, config: DataSourceConfig) -> BaseContent:
-        """Convert ContentModel to appropriate schema class using configuration"""
-
-        if config.schema_class == "Ticket":
-            return self._convert_to_ticket(content)
-        elif config.schema_class == "WikiPageContent":
-            return self._convert_to_wiki_page_content(content)
-        else:
-            return self._convert_to_base_content(content)
 
     def _convert_to_ticket(self, content: ContentModel) -> Ticket:
         """Convert ContentModel to Ticket schema"""
