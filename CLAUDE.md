@@ -24,6 +24,14 @@ uv sync
 ### Folders to ignore
 Always exclude .venv and __pycache__ folders when analysing folders.
 
+## Monorepo approach
+
+The repo contains currently two application:
+- Orbis, a powerful agentic RAG capable of ingesting heterogeneous data sources, and performing powerful analyzes to provide detailed technical answer.
+- Orbis-search, a search system for Azure DevOps ticket, using ensemble search.
+
+In addition, the repo contains Orbis-core, a library with components common to both applications. The purpose of Orbis-core is not to hold code for both, it is strictly to share common components that are not customized within orbis-core.
+
 ## Implementation Lessons Learned
 
 Critical success factors identified from the project's evolution include: adopting configuration-driven architecture over hardcoded implementations to achieve true modularity, core principle: KISS. When implementing fixes, always distinguish between band-aid solutions and root cause fixes, think about whether you are addressing the underlying issue and not the symptom. Avoid creating technical debt and inconsistencies.
