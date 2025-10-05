@@ -11,13 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
-def get_tokenizer(model: str = "gpt-5") -> tiktoken.Encoding:
+def get_tokenizer(model: str = "gpt-4.1") -> tiktoken.Encoding:
     """Get the tokenizer for a specific model with caching"""
     try:
         return tiktoken.encoding_for_model(model)
     except KeyError:
-        logger.warning(f"Model {model} not found, using default cl100k_base encoding")
-        return tiktoken.get_encoding("cl100k_base")
+        # GPT-5 models likely use o200k_base encoding, use it as fallback
+        logger.debug(f"Model {model} not found in tiktoken, using o200k_base encoding")
+        return tiktoken.get_encoding("o200k_base")
 
 
 def count_tokens(text: str, model: str = "gpt-5") -> int:
