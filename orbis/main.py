@@ -58,20 +58,12 @@ async def lifespan(app: FastAPI):
                 skip_embedding=True  # Embedding happens via /embed endpoint, not during startup
             )
 
-            if ingestion_result.get("total_processed", 0) > 0:
-                logger.info(f"✅ Wiki ingestion completed: {ingestion_result.get('total_processed', 0)} items processed")
-            else:
+            if ingestion_result.get("total_processed", 0) == 0:
                 logger.info("ℹ️ No new wiki data to ingest")
 
             # Then pre-compute summaries (no longer needs vector/embedding services)
             wiki_service = WikiSummarizationService()
-            precomputation_results = await wiki_service.precompute_all_project_summaries()
-
-            total_wikis = precomputation_results["processed"] + precomputation_results["cached"] + precomputation_results["failed"] + precomputation_results["skipped_no_content"]
-            if total_wikis > 0:
-                logger.info(f"✅ Wiki summaries ready: {precomputation_results['processed']} processed, {precomputation_results['cached']} cached, {precomputation_results['failed']} failed")
-            else:
-                logger.info("✅ Wiki summary pre-computation completed (no wikis configured)")
+            await wiki_service.precompute_all_project_summaries()
         except Exception as e:
             logger.warning(f"⚠️ Wiki summary pre-computation failed: {e}")
             logger.debug("Wiki summarization will work on-demand (slower first requests)")

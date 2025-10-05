@@ -225,8 +225,6 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
 
                             # Get excluded wiki names from config
                             excluded_wiki_names = getattr(temp_client, 'excluded_wikis', [])
-                            if excluded_wiki_names:
-                                logger.info(f"Excluding wikis: {excluded_wiki_names}")
 
                             len(discovered_wikis)
 
@@ -331,11 +329,6 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
                                         continue
 
                             len(discovered_wikis)
-
-                            # Log summary of all discovered wikis - condensed format
-                            if discovered_wikis:
-                                wiki_names = [f"{wiki['name']} ({wiki['type']})" for wiki in discovered_wikis]
-                                logger.info(f"📋 Discovered {len(discovered_wikis)} wikis: {', '.join(wiki_names[:5])}{'...' if len(discovered_wikis) > 5 else ''}")
                         else:
                             error_text = await response.text()
                             logger.error(f"Git API failed: {response.status} - {error_text}")
@@ -347,15 +340,6 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
         except Exception as e:
             logger.error(f"Error discovering wikis: {e}", exc_info=True)
             raise
-
-        # Log breakdown of discovered wikis by type
-        wiki_types = {}
-        for wiki in discovered_wikis:
-            wiki_type = wiki.get('type', 'unknown')
-            wiki_types[wiki_type] = wiki_types.get(wiki_type, 0) + 1
-
-        for wiki_type, count in wiki_types.items():
-            logger.info(f"Found {count} {wiki_type} wiki(s)")
 
         return discovered_wikis
 
@@ -419,11 +403,9 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
                 logger.warning(f"Wiki API failed for {self.wiki_name}: {e}")
 
                 # If Wiki API fails, fall back to Git API
-                logger.info(f"Attempting to access {self.wiki_name} as Git-based wiki repository")
                 return await self._get_code_wiki_pages(path, recursive)
         else:
             # No wiki_id means this is an unpublished Git-based wiki, use Git API directly
-            logger.info(f"Accessing {self.wiki_name} as unpublished Git-based wiki repository")
             return await self._get_code_wiki_pages(path, recursive)
 
     async def _get_wiki_pages_via_api(self, path: str = "", recursive: bool = True) -> list[dict[str, Any]]:
@@ -559,8 +541,6 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
 
                 # Filter for markdown files
                 markdown_files = [item for item in items if item.get("path", "").endswith(('.md', '.markdown'))]
-
-
 
                 if not markdown_files:
                     logger.warning(f"No markdown files found in repository {repo_id} for wiki {self.wiki_name}")

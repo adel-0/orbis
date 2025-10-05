@@ -180,12 +180,11 @@ class WikiSummarizationService:
 
             if total_size_mb > max_size_mb:
                 logger.warning(
-                    f"Wiki '{wiki_name}' content size ({total_size_mb:.1f}MB) exceeds limit "
-                    f"({max_size_mb}MB). Skipping summarization to avoid excessive processing time."
+                    f"Wiki '{wiki_name}' content size ({total_size_mb:.2f}MB) exceeds limit "
+                    f"({max_size_mb}MB). Skipping summarization."
                 )
                 return False
 
-            logger.info(f"Wiki '{wiki_name}' content size: {total_size_mb:.1f}MB (within {max_size_mb}MB limit)")
             return True
 
         except Exception as e:
@@ -252,7 +251,6 @@ class WikiSummarizationService:
 
             # Validate content size before processing
             if not self._validate_content_size(wiki_pages, wiki_name):
-                logger.info(f"Skipping wiki '{wiki_name}' due to size limits")
                 return None
 
             # Aggregate pages into batches and summarize efficiently
@@ -291,7 +289,6 @@ class WikiSummarizationService:
         try:
             # Group pages into batches that fit within chunk size limits
             page_batches = self._group_pages_into_batches(wiki_pages)
-            logger.info(f"Grouped {len(wiki_pages)} pages into {len(page_batches)} batches for {wiki_name}")
 
             if len(page_batches) == 1:
                 # Single batch - one API call for everything
@@ -332,7 +329,6 @@ class WikiSummarizationService:
         current_batch_tokens = 0
 
         safe_input_limit = self._calculate_safe_input_limit()
-        logger.info(f"Using safe input limit: {safe_input_limit} tokens per batch")
 
         for page in wiki_pages:
             page_content = page.get('content', '')
@@ -385,10 +381,7 @@ class WikiSummarizationService:
 
     def _log_batch_statistics(self, batches: list[list[dict[str, str]]]) -> None:
         """Log statistics for each batch"""
-        for i, batch in enumerate(batches):
-            total_content = "\n\n".join(f"## {p.get('title', 'Untitled')}\n{p.get('content', '')}" for p in batch)
-            estimated_tokens = count_tokens(total_content, self.openai_client_service.model_name)
-            logger.info(f"Batch {i+1}: {len(batch)} pages, {estimated_tokens} tokens")
+        pass
 
     async def _call_llm_for_summary(self, content: str, context: str, summary_type: str = "batch", is_final: bool = False) -> str | None:
         """
@@ -453,12 +446,9 @@ class WikiSummarizationService:
             summary = response.choices[0].message.content
             if summary:
                 summary = summary.strip()
-                summary_tokens = count_tokens(summary, self.openai_client_service.model_name)
-                logger.info(f"Generated {summary_type} summary for {context}: {summary_tokens} tokens")
                 self._log_summary_to_file(summary, context, f"{summary_type}_summary")
                 return summary
             else:
-                logger.warning(f"LLM returned empty/null response for {context}")
                 return None
 
         except ValueError as e:
@@ -491,8 +481,6 @@ class WikiSummarizationService:
     async def _combine_batch_summaries(self, batch_summaries: list[str], wiki_name: str) -> str | None:
         """Combine multiple batch summaries into final comprehensive summary using simple chunking"""
         try:
-            logger.info(f"Combining {len(batch_summaries)} batch summaries for {wiki_name}")
-
             # Simple approach: if we have too many summaries, chunk them and summarize in stages
             safe_input_limit = self._calculate_safe_input_limit()
 
@@ -670,16 +658,13 @@ class WikiSummarizationService:
                         if summary:
                             results["processed"] += 1
                             project_results["wikis"].append({"wiki": wiki_name, "status": "processed"})
-                            logger.info(f"✅ Pre-computed summary for {project_code}/{wiki_name}")
                         else:
                             results["skipped_no_content"] += 1
                             project_results["wikis"].append({"wiki": wiki_name, "status": "no_content"})
-                            logger.warning(f"⚠️ No content found for {project_code}/{wiki_name}")
 
                     except Exception as e:
                         results["failed"] += 1
                         project_results["wikis"].append({"wiki": wiki_name, "status": "failed", "error": str(e)})
-                        logger.error(f"❌ Failed to pre-compute {project_code}/{wiki_name}: {e}")
 
                     # Check timeout between wikis
                     if datetime.now() > timeout_time:
@@ -690,10 +675,6 @@ class WikiSummarizationService:
                 results["projects"][project_code] = project_results
 
             results["total_processing_time_ms"] = int((datetime.now() - start_time).total_seconds() * 1000)
-
-            total_wikis = results["processed"] + results["cached"] + results["failed"] + results["skipped_no_content"]
-            logger.info(f"🎯 Wiki pre-computation completed: {total_wikis} wikis processed in {results['total_processing_time_ms']}ms")
-            logger.info(f"   Processed: {results['processed']}, Cached: {results['cached']}, Failed: {results['failed']}, No Content: {results['skipped_no_content']}")
 
             return results
 
@@ -775,7 +756,6 @@ class WikiSummarizationService:
             # Summarize the wiki
             summary = await self._summarize_wiki(wiki_name, wiki_pages)
             if not summary:
-                logger.warning(f"Failed to generate summary for wiki: {wiki_name}")
                 return None
 
             processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
