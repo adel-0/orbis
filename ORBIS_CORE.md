@@ -128,6 +128,28 @@ with manager.get_session() as session:
     pass
 ```
 
+**Database Models** (`orbis_core.database.models`)
+
+Shared SQLAlchemy models for tracking content and embeddings:
+
+**ContentEmbedding Model** - Tracks embedded content with change detection:
+```python
+from orbis_core.database.models import ContentEmbedding
+
+# Used for incremental embedding by tracking:
+# - Which content has been embedded
+# - Content hash to detect changes
+# - Which embedding model was used
+# - Vector database ID for lookups
+```
+
+Fields:
+- `content_id`: Unique identifier for the content
+- `content_hash`: xxHash of content for change detection
+- `vector_id`: ID in vector database
+- `embedding_model`: Model used for embedding generation
+- `created_at`, `updated_at`: Timestamps
+
 ### Scheduling
 
 **Scheduler Service** (`orbis_core.scheduling`)
@@ -189,6 +211,22 @@ from orbis_core.utils.constants import clean_html_content, DEFAULT_RERANK_MODEL
 
 clean_text = clean_html_content(html_string)
 ```
+
+**Progress Tracker** - Progress tracking with ETA for long-running operations:
+```python
+from orbis_core.utils.progress_tracker import ProgressTracker
+
+tracker = ProgressTracker(total=1000, log_interval_percent=10, operation_name="Processing items")
+for item in items:
+    # Process item
+    tracker.update(count=1, custom_message="Optional status")
+```
+
+Features:
+- Automatic ETA calculation based on processing rate
+- Configurable logging intervals (by percentage)
+- Elapsed time tracking
+- Custom status messages
 
 ## Design Principles
 
