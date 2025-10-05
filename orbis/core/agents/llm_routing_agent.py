@@ -105,10 +105,15 @@ class QueryRoutingAgent:
             user_prompt = self.prompt_loader.get_user_prompt("routing_recommendations", prompt_variables)
 
             # Call Azure OpenAI with structured output
-            response = await self._call_azure_openai_structured(developer_prompt, user_prompt)
+            analysis = await self._call_azure_openai_structured(
+                developer_prompt,
+                user_prompt,
+                ContextAnalysisResponse
+            )
 
-            # Parse structured LLM response
-            analysis = self._parse_structured_response(response, data_sources)
+            if not analysis:
+                logger.error("LLM returned no analysis")
+                raise ValueError("No analysis returned from LLM")
 
             return analysis
 
@@ -197,47 +202,34 @@ class QueryRoutingAgent:
         return get_priority_boost_for_source_type(source_type)
 
 
-    async def _call_azure_openai_structured(self, developer_prompt: str, user_prompt: str) -> str:
-        """Call Azure OpenAI API with structured JSON output using shared client"""
+    async def _call_azure_openai_structured(self, developer_prompt: str, user_prompt: str, response_model):
+        """Call Azure OpenAI API with structured outputs using shared client"""
         try:
             messages = [
                 {"role": "developer", "content": developer_prompt},
                 {"role": "user", "content": user_prompt}
             ]
 
-            response = self.openai_client_service.client.chat.completions.create(
+            response = self.openai_client_service.client.beta.chat.completions.parse(
                 model=self.openai_client_service.deployment_name,
                 messages=messages,
-                max_completion_tokens=LLM_MAX_OUTPUT_TOKENS,
-                response_format={"type": "json_object"}  # Ensure JSON output
+                response_format=response_model,
+                max_completion_tokens=LLM_MAX_OUTPUT_TOKENS
             )
 
-            content = response.choices[0].message.content
+            # Get parsed result directly
+            parsed = response.choices[0].message.parsed
 
-            # Log response metadata for debugging
-            if not content:
-                logger.warning("LLM returned None/empty content")
+            if not parsed:
+                logger.warning("LLM returned None/empty parsed result")
                 logger.debug(f"Response finish_reason: {response.choices[0].finish_reason}")
-                return ""
+                return None
 
-            logger.debug(f"LLM response length: {len(content)} characters")
-            return content
+            logger.debug(f"LLM parsed result: {type(parsed).__name__}")
+            return parsed
 
         except Exception as e:
             logger.error(f"Failed to call Azure OpenAI via shared client: {e}")
-            raise
-
-    def _parse_structured_response(self, llm_response: str, data_sources: list[DataSourceProfile]) -> ContextAnalysisResponse:
-        """Parse structured LLM response using Pydantic models"""
-        try:
-            # Parse JSON response directly into ContextAnalysisResponse
-            structured_response = ContextAnalysisResponse.model_validate_json(llm_response)
-
-            # The response is already in the correct format
-            return structured_response
-
-        except Exception as e:
-            logger.error(f"Failed to parse structured LLM response: {e}")
             raise
 
 
@@ -315,59 +307,32 @@ class QueryRoutingAgent:
             developer_prompt = self.prompt_loader.get_developer_prompt("routing_recommendations", prompt_variables)
             user_prompt = self.prompt_loader.get_user_prompt("routing_recommendations", prompt_variables)
 
+            # Define response model for recommendations list
+            from pydantic import BaseModel
+
+            class RecommendationsList(BaseModel):
+                recommendations: list[DataSourceRecommendation]
+
             # Call Azure OpenAI with structured output
-            llm_response = await self._call_azure_openai_structured(developer_prompt, user_prompt)
-            return self._parse_detailed_structured_recommendations(llm_response, data_sources)
+            result = await self._call_azure_openai_structured(
+                developer_prompt,
+                user_prompt,
+                RecommendationsList
+            )
+
+            if not result or not result.recommendations:
+                logger.warning("LLM returned no recommendations")
+                return []
+
+            # Sort by relevance score
+            result.recommendations.sort(key=lambda x: x.relevance_score, reverse=True)
+            logger.info(f"Parsed {len(result.recommendations)} routing recommendations")
+            return result.recommendations
 
         except Exception as e:
             logger.error(f"Error getting detailed recommendations: {e}")
             return []
 
-
-    def _parse_detailed_structured_recommendations(self, llm_response: str, data_sources: list[DataSourceProfile]) -> list[DataSourceRecommendation]:
-        """Parse detailed LLM recommendations using structured models"""
-        try:
-            # Validate LLM response is not empty
-            if not llm_response or not llm_response.strip():
-                logger.warning("LLM returned empty response for routing recommendations")
-                return []
-
-            # Parse JSON response directly as list of DataSourceRecommendation objects
-            import json
-
-            try:
-                response_data = json.loads(llm_response)
-            except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON from LLM: {e}")
-                logger.debug(f"LLM response content: {llm_response[:500]}")  # Log first 500 chars
-                return []
-
-            # Handle both list format and object with 'recommendations' field
-            if isinstance(response_data, list):
-                recommendations_data = response_data
-            elif isinstance(response_data, dict) and 'recommendations' in response_data:
-                recommendations_data = response_data['recommendations']
-            else:
-                logger.warning(f"Unexpected LLM response structure: {type(response_data)}")
-                return []
-
-            recommendations = []
-            for rec_data in recommendations_data:
-                try:
-                    recommendation = DataSourceRecommendation.model_validate(rec_data)
-                    recommendations.append(recommendation)
-                except Exception as e:
-                    logger.warning(f"Skipping invalid recommendation: {e}")
-                    continue
-
-            # Sort by relevance score
-            recommendations.sort(key=lambda x: x.relevance_score, reverse=True)
-            logger.info(f"Parsed {len(recommendations)} routing recommendations")
-            return recommendations
-
-        except Exception as e:
-            logger.error(f"Failed to parse detailed structured recommendations: {e}")
-            return []  # Return empty list instead of raising
 
     async def generate_search_plan(self, query: str, project_context: str | None = None) -> SearchPlan:
         """Generate a comprehensive search plan with weights and filters"""

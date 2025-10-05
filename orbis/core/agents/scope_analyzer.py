@@ -248,10 +248,10 @@ class ScopeAnalyzer:
             # Build the analysis prompt
             prompt = self._build_analysis_prompt(content, project_context, documentation_context)
 
-            # Call Azure OpenAI
+            # Call Azure OpenAI with structured outputs
             logger.debug(f"🧠 AGENTIC SCOPE: Sending request to Azure OpenAI - Model: {self.deployment_name}, Max tokens: {self.config['max_output_tokens']}")
 
-            response = self.client.chat.completions.create(
+            response = self.client.beta.chat.completions.parse(
                 model=self.deployment_name,
                 messages=[
                     {
@@ -263,40 +263,29 @@ class ScopeAnalyzer:
                         "content": prompt
                     }
                 ],
-                reasoning_effort="low",  # Fast analysis for scope determination
-                verbosity="low",         # Structured JSON output
+                response_format=ScopeAnalysisResult,
                 max_completion_tokens=self.config["max_output_tokens"]
             )
 
             logger.debug(f"🧠 AGENTIC SCOPE: Received response from Azure OpenAI - Usage: {response.usage}, Model: {response.model if hasattr(response, 'model') else 'unknown'}")
 
-            # Parse the response with better error handling
+            # Get parsed result directly from structured output
             if not response.choices or len(response.choices) == 0:
                 logger.error("🧠 AGENTIC SCOPE: No choices returned in OpenAI response")
                 return None
 
-            message_content = response.choices[0].message.content
-            if message_content is None:
-                logger.error("🧠 AGENTIC SCOPE: OpenAI returned None content - possible content filtering")
+            parsed_result = response.choices[0].message.parsed
+            if parsed_result is None:
+                logger.error("🧠 AGENTIC SCOPE: OpenAI returned None parsed result - possible content filtering")
                 logger.error("🧠 AGENTIC SCOPE: Check if prompt triggers content policies or safety filters")
                 return None
 
-            analysis_text = message_content.strip()
-            if not analysis_text:
-                logger.error("🧠 AGENTIC SCOPE: OpenAI returned empty content after stripping")
-                return None
+            logger.info(f"🧠 AGENTIC SCOPE: Structured output parsed successfully - confidence {parsed_result.confidence:.2f}")
 
-            logger.debug(f"Scope Analyzer LLM response: {analysis_text[:200]}...")
-            logger.info(f"🧠 AGENTIC SCOPE: LLM returned {len(analysis_text)} character analysis - parsing structured information")
-
-            # Log the full response for debugging
+            # Log the full response for debugging (using model dump for structured output)
             context_name = f"scope_analysis_{project_context.project_code if project_context else 'unknown'}"
-            self._log_response_to_file(analysis_text, context_name, "scope_analysis")
+            self._log_response_to_file(parsed_result.model_dump_json(indent=2), context_name, "scope_analysis")
 
-            # Parse JSON response from LLM
-            parsed_result = self._parse_analysis_response(analysis_text, content)
-            if not parsed_result:
-                logger.error("Failed to parse LLM response")
             return parsed_result
 
         except Exception as e:
@@ -333,33 +322,6 @@ PROJECT CONTEXT:
         }
 
         return self.prompt_loader.get_user_prompt("scope_analysis", variables)
-
-    def _parse_analysis_response(self, analysis_text: str, content: str) -> ScopeAnalysisResult | None:
-        """
-        Parse JSON response from LLM.
-        """
-        if not analysis_text.strip():
-            return None
-
-        try:
-            import json
-
-            # Try to parse as JSON
-            analysis_data = json.loads(analysis_text.strip())
-
-            return ScopeAnalysisResult(
-                scope_description=analysis_data["scope_description"],
-                intent_description=analysis_data["intent_description"],
-                confidence=float(analysis_data["confidence"]),
-                recommended_source_types=analysis_data["recommended_source_types"]
-            )
-        except (json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.error(f"Error parsing JSON analysis response: {e}")
-            logger.debug(f"Raw LLM response: {analysis_text[:500]}...")
-            return None
-        except Exception as e:
-            logger.error(f"Unexpected error parsing analysis response: {e}")
-            return None
 
 
     def is_configured(self) -> bool:
