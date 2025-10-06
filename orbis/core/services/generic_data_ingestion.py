@@ -164,18 +164,67 @@ class GenericDataIngestionService:
             if not content_items:
                 return {'success': True, 'processed_items': 0}
 
-            # Extract texts for embedding
-            texts = [item["text"] for item in content_items]
+            # Convert dictionary items to BaseContent objects for the embedding service
+            from core.schemas import BaseContent, Ticket, WikiPageContent
 
-            # Generate embeddings using embedding service
-            embeddings = await self.embedding_service.generate_embeddings(texts)
+            base_content_items: list[BaseContent] = []
+            for item in content_items:
+                metadata = item.get("metadata", {})
+                source_type = item.get("source_type", "")
 
-            # Store in vector database using generic vector service
-            await self._store_in_vector_db(content_items, embeddings, collection_name)
+                # Determine content type and create appropriate BaseContent subclass
+                if "workitem" in source_type.lower():
+                    # Create Ticket object
+                    content_obj = Ticket(
+                        id=item["id"],
+                        title=metadata.get("title", ""),
+                        description=metadata.get("content", ""),
+                        source_name=item.get("source_name"),
+                        source_type=source_type,
+                        organization=metadata.get("organization"),
+                        project=metadata.get("project"),
+                        comments=[],  # Comments are already concatenated in text
+                        area_path=metadata.get("area_path"),
+                        additional_fields=metadata
+                    )
+                elif "wiki" in source_type.lower():
+                    # Create WikiPageContent object
+                    content_obj = WikiPageContent(
+                        id=item["id"],
+                        title=metadata.get("title", ""),
+                        content=metadata.get("content", ""),
+                        source_name=item.get("source_name"),
+                        source_type=source_type,
+                        organization=metadata.get("organization"),
+                        project=metadata.get("project"),
+                        path=metadata.get("path"),
+                        author=metadata.get("author"),
+                        last_modified=metadata.get("last_modified")
+                    )
+                else:
+                    # Generic BaseContent for other types
+                    content_obj = BaseContent(
+                        id=item["id"],
+                        title=metadata.get("title", ""),
+                        content_type=source_type,
+                        source_name=item.get("source_name"),
+                        source_type=source_type,
+                        organization=metadata.get("organization"),
+                        project=metadata.get("project")
+                    )
+
+                base_content_items.append(content_obj)
+
+            # Generate embeddings using embedding service (it will handle text extraction)
+            result = await self.embedding_service.generate_embeddings(
+                base_content_items,
+                vector_service=self.vector_service,
+                clear_existing=False
+            )
 
             return {
-                'success': True,
-                'processed_items': len(content_items),
+                'success': result.get('success', False),
+                'processed_items': result.get('processed_items', 0),
                 'collection': collection_name
             }
 

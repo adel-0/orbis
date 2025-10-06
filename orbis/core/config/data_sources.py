@@ -101,3 +101,19 @@ def get_all_collection_names() -> list[str]:
         if collection_name not in collection_names:
             collection_names.append(collection_name)
     return collection_names
+
+
+def get_priority_boost_for_source_type(source_type: str) -> float:
+    """
+    Get the priority boost (search weight) for a data source type.
+    Returns default of 1.0 since priority is now set per instance in the database.
+
+    Args:
+        source_type: The data source type
+
+    Returns:
+        Default priority boost of 1.0
+    """
+    # Priority is now configured per DataSource instance in the database
+    # This function returns a default for backwards compatibility
+    return 1.0

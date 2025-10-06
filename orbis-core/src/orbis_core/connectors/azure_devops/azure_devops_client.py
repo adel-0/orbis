@@ -323,9 +323,17 @@ class AzureDevOpsClient(AzureDevOpsAuthMixin):
 
                 # Create work item object
                 # Standardize field names
+                # Convert Azure DevOps API URL to user-facing web URL
+                # API URL: https://dev.azure.com/{org}/{project}/_apis/wit/workItems/{id}
+                # Web URL: https://dev.azure.com/{org}/{project}/_workitems/edit/{id}
+                import urllib.parse
+                project_encoded = urllib.parse.quote(self.project, safe='')
+                web_url = f"https://dev.azure.com/{self.organization}/{project_encoded}/_workitems/edit/{workitem_id}"
+
                 result = {
                     'Id': workitem_id,
-                    'Comments': comments
+                    'Comments': comments,
+                    'url': web_url
                 }
 
                 # Add all fields from the work item

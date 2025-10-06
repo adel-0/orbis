@@ -481,6 +481,12 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
             # Process markdown and extract images
             html_content, image_references = self._process_markdown_content(content)
 
+            # Generate user-facing URL for the wiki page
+            import urllib.parse
+            project_encoded = urllib.parse.quote(self.project, safe='')
+            path_encoded = urllib.parse.quote(page_path, safe='/%')
+            wiki_url = f"https://dev.azure.com/{self.organization}/{project_encoded}/_git/Wiki.{self.wiki_name}?path={path_encoded}"
+
             result = {
                 "id": str(page_id),
                 "path": page_path,
@@ -490,7 +496,8 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
                 "image_references": image_references,
                 "author": page_data.get("lastModifiedBy", {}).get("displayName"),
                 "last_modified": page_data.get("lastModifiedDate"),
-                "version": page_data.get("version", "1")
+                "version": page_data.get("version", "1"),
+                "url": wiki_url
             }
 
             logger.debug(f"Successfully processed page {page_path} with {len(content)} characters of content")
@@ -573,6 +580,12 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
                             html_content, image_references = self._process_markdown_content(content)
                             title = self._extract_title_from_path(file_path)
 
+                            # Generate user-facing URL for the wiki page
+                            import urllib.parse
+                            project_encoded = urllib.parse.quote(self.project, safe='')
+                            path_encoded = urllib.parse.quote(file_path, safe='/%')
+                            wiki_url = f"https://dev.azure.com/{self.organization}/{project_encoded}/_git/Wiki.{self.wiki_name}?path={path_encoded}"
+
                             processed_page = {
                                 "id": str(file_item.get("objectId", "")),
                                 "path": file_path,
@@ -583,7 +596,8 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
                                 "author": file_item.get("latestChange", {}).get("author", {}).get("name", "Unknown"),
                                 "last_modified": file_item.get("latestChange", {}).get("timestamp"),
                                 "version": str(file_item.get("latestChange", {}).get("changeId", "")),
-                                "wiki_name": self.wiki_name  # Add wiki name for proper identification
+                                "wiki_name": self.wiki_name,  # Add wiki name for proper identification
+                                "url": wiki_url
                             }
 
                             processed_pages.append(processed_page)
@@ -679,6 +693,12 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
             # Process markdown and extract images
             html_content, image_references = self._process_markdown_content(content)
 
+            # Generate user-facing URL for the wiki page
+            import urllib.parse
+            project_encoded = urllib.parse.quote(self.project, safe='')
+            path_encoded = urllib.parse.quote(page_path, safe='/%')
+            wiki_url = f"https://dev.azure.com/{self.organization}/{project_encoded}/_git/Wiki.{self.wiki_name}?path={path_encoded}"
+
             result = {
                 "id": str(page_id),
                 "path": page_path,
@@ -688,7 +708,8 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
                 "image_references": image_references,
                 "author": page_info.get("lastModifiedBy", {}).get("displayName"),
                 "last_modified": page_info.get("lastModifiedDate"),
-                "version": page_info.get("version", "1")
+                "version": page_info.get("version", "1"),
+                "url": wiki_url
             }
 
             logger.debug(f"Successfully processed page {page_path} with {len(content)} characters of content")

@@ -456,9 +456,9 @@ class GenericMultiModalSearch:
         try:
             logger.debug(f"Searching source type: {source_type}")
 
-            # Get configuration for this source type
-            config = get_data_source_config(source_type)
-            collection_name = config["collection_name"]
+            # Get collection name from connector (self-describing)
+            from core.config.data_sources import get_collection_name
+            collection_name = get_collection_name(source_type)
 
             # Process filters and convert source_names to ChromaDB where clause
             vector_filters = self._build_vector_filters(filters, source_type)
@@ -507,9 +507,14 @@ class GenericMultiModalSearch:
             content_id = metadata.get("id", "unknown")
             title = metadata.get("title", "Untitled")
 
-            # Get the content type configuration
-            config = get_data_source_config(source_type)
-            content_type = config.get("content_type", "generic")
+            # Infer content type from source type
+            # Connectors are self-describing, content_type mapping is straightforward
+            content_type_map = {
+                "azdo_workitems": "work_item",
+                "azdo_wiki": "wiki_page",
+                "oncall_web_help": "oncall_web_help"
+            }
+            content_type = content_type_map.get(source_type, "generic")
 
             # Create appropriate content object based on source type
             if source_type == "azdo_workitems" or content_type == "work_item":
