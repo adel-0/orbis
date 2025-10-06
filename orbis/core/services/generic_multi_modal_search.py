@@ -739,14 +739,15 @@ class GenericMultiModalSearch:
                 top_k=len(rerank_input)
             )
 
-            # Update similarity scores based on rerank results
+            # Update results with rerank scores (keep original similarity_score intact)
             for i, reranked_item in enumerate(reranked_results):
                 if i < len(results):
-                    # Use rerank_score if available, otherwise use original similarity
+                    # Set rerank_score attribute (don't overwrite similarity_score)
                     rerank_score = reranked_item.get('rerank_score', results[i].similarity_score)
-                    results[i].similarity_score = rerank_score
+                    results[i].rerank_score = rerank_score
 
-            # Sort by new scores (results are already reordered by reranker)
+            # Sort by rerank scores
+            results.sort(key=lambda x: getattr(x, 'rerank_score', x.similarity_score), reverse=True)
             return results[:len(reranked_results)]
 
         except Exception as e:
