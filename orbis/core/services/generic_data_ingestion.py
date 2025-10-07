@@ -206,7 +206,7 @@ class GenericDataIngestionService:
                     content_obj = BaseContent(
                         id=item["id"],
                         title=metadata.get("title", ""),
-                        content_type=source_type,
+                        content_type="generic",
                         source_name=item.get("source_name"),
                         source_type=source_type,
                         organization=metadata.get("organization"),

@@ -38,7 +38,7 @@ class DocumentationAggregator:
         # Aggregation configuration
         self.config = {
             "max_output_tokens": 50000,  # Maximum tokens for LLM response generation
-            "max_sources_per_type": 5,  # Limit sources per type to manage context
+            "max_sources_per_type": 8,  # Increase per-type to surface more sources
             "max_input_tokens": 100000,  # Maximum input context capacity
             "debug_logging_enabled": True,  # Enable file logging of responses for debugging
             "debug_log_dir": "logs/documentation_aggregation"  # Directory for response debug logs
@@ -166,11 +166,21 @@ class DocumentationAggregator:
                 title = result.metadata.get('title', '') or self._extract_title(result)
                 url = result.metadata.get('source_reference', '')
 
+                # Use final_score from two-stage normalization (0-1 scale, cross-source comparable)
+                # Fallback chain: final_score → normalized_score → rerank_score → similarity_score
+                score = getattr(result, 'final_score', None)
+                if score is None:
+                    score = getattr(result, 'normalized_score', None)
+                if score is None:
+                    score = getattr(result, 'rerank_score', None)
+                if score is None:
+                    score = result.similarity_score
+
                 source_dict = {
                     "type": source_type,
                     "title": title,
                     "content": result.concatenated_text,
-                    "score": getattr(result, 'rerank_score', None) or result.similarity_score,
+                    "score": float(score),
                     "source_name": result.metadata.get('source_name', 'Unknown'),
                     "id": self._extract_content_id(result),
                     "url": url,
@@ -185,11 +195,21 @@ class DocumentationAggregator:
                 url = result.metadata.get('source_reference', '')
                 source_type = getattr(result, 'content_type', 'unknown')
 
+                # Use final_score from two-stage normalization (0-1 scale, cross-source comparable)
+                # Fallback chain: final_score → normalized_score → rerank_score → similarity_score
+                score = getattr(result, 'final_score', None)
+                if score is None:
+                    score = getattr(result, 'normalized_score', None)
+                if score is None:
+                    score = getattr(result, 'rerank_score', None)
+                if score is None:
+                    score = result.similarity_score
+
                 source_dict = {
                     "type": source_type,
                     "title": title,
                     "content": result.concatenated_text,
-                    "score": getattr(result, 'rerank_score', None) or result.similarity_score,
+                    "score": float(score),
                     "source_name": result.metadata.get('source_name', 'Unknown'),
                     "id": self._extract_content_id(result),
                     "url": url,
@@ -211,7 +231,7 @@ class DocumentationAggregator:
         all_sources.sort(key=lambda x: x["score"], reverse=True)
 
         # Limit total sources to manage context window
-        max_total_sources = 15
+        max_total_sources = 24
         return all_sources[:max_total_sources]
 
     def _create_source_references(self, ranked_sources: list[dict[str, Any]]) -> list[SourceReference]:

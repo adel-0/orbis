@@ -43,6 +43,7 @@ class GenericAggregatedSearchResult:
         self.total_results: int = 0
         self.search_strategies_used: list[str] = []
         self.collections_searched: list[str] = []
+        self.scope_analysis = None  # Store for cross-collection reranking
 
     @property
     def workitem_results(self) -> list[SearchResult]:
@@ -81,8 +82,8 @@ class GenericMultiModalSearch:
 
         # Dynamic configuration based on registered data sources
         self.config = {
-            "default_top_k": 10,
-            "rerank_top_k": 3,
+            "default_top_k": 20,
+            "rerank_top_k": 8,
             "max_concurrent_searches": 4
         }
 
@@ -162,8 +163,10 @@ class GenericMultiModalSearch:
 
         if len(all_results) > 1 and self.cross_collection_reranker:
             try:
+                # Pass scope_analysis if available for proper boosting
+                scope = getattr(result, 'scope_analysis', None)
                 reranked_results = await self._rerank_cross_collection_results(
-                    all_results, query, top_k=self.config["rerank_top_k"]
+                    all_results, query, top_k=self.config["rerank_top_k"], scope_analysis=scope
                 )
                 result.reranked_results = reranked_results
                 result.search_strategies_used.append("cross_collection_rerank")
@@ -201,12 +204,16 @@ class GenericMultiModalSearch:
             logger.debug(f"Project: {project_code}")
 
         logger.debug(f"Executing with top_k={self.config['default_top_k']}")
-        return await self.search(
+        result = await self.search(
             query=query,
             source_types=source_types,
             filters=filters,
             top_k=self.config["default_top_k"]
         )
+        
+        # Store scope_analysis for cross-collection reranking
+        result.scope_analysis = scope_analysis
+        return result
 
     async def search_with_plan(self, query: str, search_plan: SearchPlan) -> GenericAggregatedSearchResult:
         """
@@ -295,8 +302,10 @@ class GenericMultiModalSearch:
                     "broad": min(8, self.config["rerank_top_k"] + 2)
                 }.get(search_plan.strategy, self.config["rerank_top_k"])
 
+                # Pass scope_analysis if available for proper boosting
+                scope = getattr(result, 'scope_analysis', None)
                 reranked_results = await self._rerank_cross_collection_results(
-                    all_results, query, top_k=rerank_count
+                    all_results, query, top_k=rerank_count, scope_analysis=scope
                 )
                 result.reranked_results = reranked_results
                 result.search_strategies_used.append(f"cross_collection_rerank_{search_plan.strategy}")
@@ -394,7 +403,11 @@ class GenericMultiModalSearch:
         logger.info(f"Source weights from routing: {source_weights}")
         
         # Execute search with the created plan
-        return await self.search_with_plan(query, search_plan)
+        result = await self.search_with_plan(query, search_plan)
+        
+        # Store scope_analysis for cross-collection reranking
+        result.scope_analysis = scope_analysis
+        return result
 
     def _build_vector_filters(self, filters: dict[str, Any] | None, source_type: str) -> dict[str, Any] | None:
         """Convert SearchPlan filters to ChromaDB where filters"""
@@ -482,7 +495,7 @@ class GenericMultiModalSearch:
                         content=content_obj,
                         similarity_score=item["similarity"],
                         concatenated_text=item["content"],  # Generic content is already the searchable text
-                        content_type=source_type,
+                        content_type=content_obj.content_type,  # Use the actual content type, not source_type
                         metadata=item["metadata"]
                     )
                     results.append(search_result)
@@ -724,31 +737,35 @@ class GenericMultiModalSearch:
             if not self.rerank_service.is_loaded():
                 return results
 
-            # Convert to format expected by reranker
+            # Convert to format expected by reranker, preserving index for mapping
             rerank_input = []
-            for result in results:
+            for idx, result in enumerate(results):
                 rerank_input.append({
                     "text": result.concatenated_text,
-                    "metadata": getattr(result, 'metadata', {})
+                    "metadata": {**getattr(result, 'metadata', {}), "__orig_index__": idx}
                 })
 
             # Apply reranking
-            reranked_results = self.rerank_service.rerank(
+            reranked_items = self.rerank_service.rerank(
                 query=query,
                 items=rerank_input,
                 top_k=len(rerank_input)
             )
 
-            # Update results with rerank scores (keep original similarity_score intact)
-            for i, reranked_item in enumerate(reranked_results):
-                if i < len(results):
-                    # Set rerank_score attribute (don't overwrite similarity_score)
-                    rerank_score = reranked_item.get('rerank_score', results[i].similarity_score)
-                    results[i].rerank_score = rerank_score
+            # Attach rerank scores back to corresponding results safely
+            for item in reranked_items:
+                meta = item.get('metadata', {}) or {}
+                idx = meta.get('__orig_index__')
+                if idx is None:
+                    continue
+                if 0 <= idx < len(results):
+                    results[idx].rerank_score = item.get('rerank_score', results[idx].similarity_score)
 
             # Sort by rerank scores
             results.sort(key=lambda x: getattr(x, 'rerank_score', x.similarity_score), reverse=True)
-            return results[:len(reranked_results)]
+
+            # Cap list length to number of returned reranked items
+            return results[:len(reranked_items)]
 
         except Exception as e:
             logger.error(f"Error reranking results: {e}")
@@ -756,15 +773,17 @@ class GenericMultiModalSearch:
 
     async def _rerank_cross_collection_results(self, all_results: list[SearchResult],
                                              query: str,
-                                             top_k: int = 3) -> list[SearchResult]:
-        """Apply cross-collection reranking"""
+                                             top_k: int = 3,
+                                             scope_analysis=None) -> list[SearchResult]:
+        """Apply cross-collection reranking with proper two-stage normalization"""
         try:
             # Use the cross-collection reranker if available
             if hasattr(self.cross_collection_reranker, 'rerank_cross_collection_results'):
-                # Try to use the existing reranking method
+                # Pass scope_analysis for optional boosting
                 return await self.cross_collection_reranker.rerank_cross_collection_results(
                     all_results=all_results,
                     query=query,
+                    scope_analysis=scope_analysis,
                     target_count=top_k
                 )
             else:
@@ -797,6 +816,7 @@ class GenericMultiModalSearch:
             "embedding_service_configured": self.embedding_service is not None,
             "rerank_service_configured": self.rerank_service.is_loaded() if self.rerank_service else False
         }
+
 
     def is_loaded(self) -> bool:
         """Check if the search service is properly configured"""

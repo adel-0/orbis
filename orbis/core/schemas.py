@@ -49,7 +49,7 @@ class WikiPageContent(BaseContent):
     content: str | None = None  # Markdown content
     html_content: str | None = None  # Rendered HTML
     path: str | None = None  # Wiki page path
-    image_references: list[str] | None = None
+    image_references: list[dict[str, str]] | None = None
     author: str | None = None
     last_modified: datetime | None = None
     
@@ -95,6 +95,10 @@ class SearchResult(BaseModel):
     final_score: float | None = None  # Final combined score after reranking and boosting
     content_type: str  # For easier handling in UI
     metadata: dict[str, Any] | None = Field(default_factory=dict)  # Additional metadata from vector DB
+    stage1_score: float | None = None
+    rrf_rank: int | None = None
+    rrf_score: float | None = None
+    blended_score: float | None = None
 
 class SearchResponse(BaseModel):
     results: list[SearchResult]
