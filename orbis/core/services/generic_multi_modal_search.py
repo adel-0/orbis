@@ -115,7 +115,6 @@ class GenericMultiModalSearch:
             source_types = list_data_source_types()
         else:
             # Validate source types
-            len(source_types)
             source_types = [st for st in source_types if is_valid_source_type(st)]
 
         if not source_types:

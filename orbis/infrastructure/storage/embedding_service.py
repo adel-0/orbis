@@ -1,10 +1,12 @@
 import asyncio
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
+from app.db.session import get_db_session
 from config.settings import settings
 from core.schemas import BaseContent
 from infrastructure.storage.generic_vector_service import GenericVectorService
@@ -12,6 +14,17 @@ from orbis_core.embedding import EmbeddingService as CoreEmbeddingService
 from orbis_core.utils.progress_tracker import ProgressTracker
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ContentItemDTO:
+    """DTO for converting database content records to embeddable content items"""
+    id: int
+    title: str
+    content: str
+    metadata: dict[str, Any]
+    source_name: str | None
+    source_type: str | None
 
 
 class EmbeddingService:
@@ -222,7 +235,8 @@ class EmbeddingService:
                 DataSourceService,
             )
 
-            with DataSourceService() as ds_service:
+            with get_db_session() as db:
+                ds_service = DataSourceService(db)
                 data_source = ds_service.get_data_source(content_item.source_name)
                 if data_source and data_source.config:
                     # embedding_field_config should be stored in the config JSON field
@@ -505,19 +519,18 @@ class EmbeddingService:
         if clear_existing:
             await self._clear_embedding_tracking()
         
-        # Convert database records to BaseContent-like objects
+        # Convert database records to ContentItemDTO objects
         content_items = []
         for record in content_records:
-            # Create a simple object with the necessary attributes
             # The data_source relationship should be eagerly loaded by the query
-            content_item = type('ContentItem', (), {
-                'id': record.id,
-                'title': record.title or '',
-                'content': record.content or '',
-                'metadata': record.content_metadata or {},
-                'source_name': record.data_source.name if record.data_source else None,
-                'source_type': record.data_source.source_type if record.data_source else None,
-            })()
+            content_item = ContentItemDTO(
+                id=record.id,
+                title=record.title or '',
+                content=record.content or '',
+                metadata=record.content_metadata or {},
+                source_name=record.data_source.name if record.data_source else None,
+                source_type=record.data_source.source_type if record.data_source else None
+            )
             content_items.append(content_item)
         
         result = await self.generate_embeddings(
@@ -558,18 +571,18 @@ class EmbeddingService:
         batch_size: int | None
     ) -> dict[str, Any]:
         """Embed specific database content records and track them"""
-        # Convert database records to BaseContent-like objects
+        # Convert database records to ContentItemDTO objects
         content_items = []
         for record in content_records:
             # The data_source relationship should be eagerly loaded by the query
-            content_item = type('ContentItem', (), {
-                'id': record.id,
-                'title': record.title or '',
-                'content': record.content or '',
-                'metadata': record.content_metadata or {},
-                'source_name': record.data_source.name if record.data_source else None,
-                'source_type': record.data_source.source_type if record.data_source else None,
-            })()
+            content_item = ContentItemDTO(
+                id=record.id,
+                title=record.title or '',
+                content=record.content or '',
+                metadata=record.content_metadata or {},
+                source_name=record.data_source.name if record.data_source else None,
+                source_type=record.data_source.source_type if record.data_source else None
+            )
             content_items.append(content_item)
         
         result = await self.generate_embeddings(

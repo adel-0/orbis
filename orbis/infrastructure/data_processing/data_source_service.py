@@ -25,14 +25,19 @@ except Exception:
 class DataSourceService:
     """Service for managing data sources with encryption support"""
 
-    def __init__(self, db: Session | None = None):
-        self.db = db
-        self._should_close_db = False
-        self._fernet: Any | None = None
+    # Sensitive fields that require encryption
+    SENSITIVE_FIELDS = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-        if self.db is None:
-            self.db = get_db_session()
-            self._should_close_db = True
+    def __init__(self, db: Session | None = None):
+        """
+        Initialize DataSourceService.
+
+        Args:
+            db: Optional database session. If not provided, a new session will be created.
+                Caller is responsible for managing the session lifecycle (e.g., using get_db_session() context manager).
+        """
+        self.db = db if db is not None else get_db_session()
+        self._fernet: Any | None = None
 
         # Initialize encryption if key is provided and cryptography is available
         key = os.getenv('ENCRYPTION_KEY', '')
@@ -44,13 +49,6 @@ class DataSourceService:
                 # Fail fast: invalid key provided
                 raise ValueError("Invalid ENCRYPTION_KEY. Provide a valid Fernet key generated via cryptography.Fernet.generate_key().") from e
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._should_close_db and self.db:
-            self.db.close()
-
     def create_data_source(self, name: str, source_type: str, config: dict[str, Any],
                          enabled: bool = True, context_tags: list[str] = None,
                          priority: int = 1) -> DataSourceModel:
@@ -58,9 +56,8 @@ class DataSourceService:
         try:
             # Encrypt sensitive fields in config
             encrypted_config = config.copy()
-            sensitive_fields = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-            for field in sensitive_fields:
+            for field in self.SENSITIVE_FIELDS:
                 if field in encrypted_config and encrypted_config[field]:
                     encrypted_config[field] = self._encrypt(str(encrypted_config[field]))
 
@@ -80,7 +77,7 @@ class DataSourceService:
 
             # Decrypt for return
             decrypted_config = encrypted_config.copy()
-            for field in sensitive_fields:
+            for field in self.SENSITIVE_FIELDS:
                 if field in decrypted_config and decrypted_config[field]:
                     decrypted_config[field] = self._decrypt(str(decrypted_config[field]))
             data_source.config = decrypted_config
@@ -97,9 +94,8 @@ class DataSourceService:
         if data_source and data_source.config:
             # Decrypt sensitive fields
             decrypted_config = data_source.config.copy()
-            sensitive_fields = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-            for field in sensitive_fields:
+            for field in self.SENSITIVE_FIELDS:
                 if field in decrypted_config and decrypted_config[field]:
                     decrypted_config[field] = self._decrypt(str(decrypted_config[field]))
 
@@ -119,9 +115,8 @@ class DataSourceService:
         for data_source in data_sources:
             if data_source.config:
                 decrypted_config = data_source.config.copy()
-                sensitive_fields = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-                for field in sensitive_fields:
+                for field in self.SENSITIVE_FIELDS:
                     if field in decrypted_config and decrypted_config[field]:
                         decrypted_config[field] = self._decrypt(str(decrypted_config[field]))
 
@@ -139,9 +134,8 @@ class DataSourceService:
             if key == 'config' and value:
                 # Handle config updates with encryption
                 config = value.copy()
-                sensitive_fields = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-                for field in sensitive_fields:
+                for field in self.SENSITIVE_FIELDS:
                     if field in config and config[field]:
                         config[field] = self._encrypt(str(config[field]))
 
@@ -155,9 +149,8 @@ class DataSourceService:
         # Decrypt config for return
         if data_source.config:
             decrypted_config = data_source.config.copy()
-            sensitive_fields = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-            for field in sensitive_fields:
+            for field in self.SENSITIVE_FIELDS:
                 if field in decrypted_config and decrypted_config[field]:
                     decrypted_config[field] = self._decrypt(str(decrypted_config[field]))
 
@@ -216,9 +209,8 @@ class DataSourceService:
         if data_source and data_source.config:
             # Decrypt sensitive fields
             decrypted_config = data_source.config.copy()
-            sensitive_fields = ['pat', 'client_secret', 'api_token', 'password', 'secret']
 
-            for field in sensitive_fields:
+            for field in self.SENSITIVE_FIELDS:
                 if field in decrypted_config and decrypted_config[field]:
                     decrypted_config[field] = self._decrypt(str(decrypted_config[field]))
 

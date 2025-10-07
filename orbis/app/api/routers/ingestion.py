@@ -4,6 +4,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_data_ingestion_service, require_api_key
+from app.db.session import get_db_session
 from core.schemas import (
     DataIngestionRequest,
     DataIngestionResponse,
@@ -41,7 +42,8 @@ async def ingest_data_source(source_name: str, request: dict[str, Any] = None):
         request = request or {}
 
         # Get data source from database
-        with DataSourceService() as ds_service:
+        with get_db_session() as db:
+            ds_service = DataSourceService(db)
             data_source = ds_service.get_data_source(source_name)
             if not data_source:
                 raise HTTPException(status_code=404, detail=f"Data source '{source_name}' not found")

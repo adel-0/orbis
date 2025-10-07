@@ -135,31 +135,34 @@ class GenericVectorService:
                 self._recreate_collection(collection_name)
                 collection = self.get_or_create_collection(collection_name)
 
-            # Prepare data for storage - handle duplicate IDs within the batch
-            ids = []
-            seen_ids = set()
-
-            for item in content_items:
+            # Prepare data for storage
+            # Deduplicate items within the batch by ID (keep last occurrence with its embedding)
+            items_by_id = {}
+            embeddings_by_id = {}
+            for i, item in enumerate(content_items):
                 item_id = str(item["id"])
-                original_id = item_id
-                counter = 0
-                while item_id in seen_ids:
-                    counter += 1
-                    item_id = f"{original_id}_dup_{counter}"
-                seen_ids.add(item_id)
-                ids.append(item_id)
+                items_by_id[item_id] = item
+                embeddings_by_id[item_id] = embeddings[i]
 
-            documents = [item["text"] for item in content_items]
+            # Extract deduplicated items and their embeddings
+            unique_items = list(items_by_id.values())
+            unique_embeddings = [embeddings_by_id[str(item["id"])] for item in unique_items]
+
+            if len(unique_items) < len(content_items):
+                logger.warning(f"Deduplication: {len(content_items)} items reduced to {len(unique_items)} unique items")
+
+            ids = [str(item["id"]) for item in unique_items]
+            documents = [item["text"] for item in unique_items]
             metadatas = []
 
             # Process metadata - ensure all values are JSON serializable
-            for i, item in enumerate(content_items):
+            for item in unique_items:
                 metadata = item.get("metadata", {}).copy()
 
-                # Add system metadata using the corrected ID
+                # Add system metadata
                 metadata.update({
-                    "content_id": ids[i],  # Use the corrected ID
-                    "original_id": item["id"],  # Keep track of original ID
+                    "content_id": str(item["id"]),
+                    "original_id": str(item["id"]),
                     "concatenated_text": item["text"],
                     "source_type": item.get("source_type", "unknown"),
                     "source_name": item.get("source_name", "unknown"),
@@ -473,31 +476,30 @@ class GenericVectorService:
                 collection = self.get_or_create_collection(collection_name)
 
             # Prepare data for storage
+            # Deduplicate items within the batch by ID (keep last occurrence with its embedding)
+            items_by_id = {}
+            embeddings_by_id = {}
+            for i, item in enumerate(content_items):
+                item_id = safe_get(item, "id")
+                if not item_id:
+                    raise ValueError("Content item missing 'id' field")
+                item_id = str(item_id)
+                items_by_id[item_id] = item
+                embeddings_by_id[item_id] = embeddings[i]
+
+            # Extract deduplicated items and their embeddings
+            unique_items = list(items_by_id.values())
+            unique_embeddings = [embeddings_by_id[str(safe_get(item, "id"))] for item in unique_items]
+
+            if len(unique_items) < len(content_items):
+                logger.warning(f"Deduplication: {len(content_items)} items reduced to {len(unique_items)} unique items")
+
             ids = []
             documents = []
             metadatas = []
 
-            # Track seen IDs to handle duplicates within the batch
-            seen_ids = set()
-
-            for item in content_items:
-                # Extract id and build text from item (handling both dict and object)
-                item_id = safe_get(item, "id")
-
-                if not item_id:
-                    raise ValueError("Content item missing 'id' field")
-
-                # Ensure ID is string
-                item_id = str(item_id)
-
-                # Handle duplicate IDs within the batch by adding a suffix
-                original_id = item_id
-                counter = 0
-                while item_id in seen_ids:
-                    counter += 1
-                    item_id = f"{original_id}_dup_{counter}"
-
-                seen_ids.add(item_id)
+            for item in unique_items:
+                item_id = str(safe_get(item, "id"))
 
                 # Build text from content fields like embedding service does
                 text_parts = []
@@ -551,8 +553,8 @@ class GenericVectorService:
 
                 # Add system metadata (without overwriting mandatory fields)
                 system_metadata = {
-                    "content_id": item_id,  # Already the corrected ID
-                    "original_id": safe_get(item, "id"),  # Keep track of original ID
+                    "content_id": item_id,
+                    "original_id": safe_get(item, "id"),
                     "concatenated_text": item_text,
                     "source_type": safe_get(item, "source_type", "unknown"),
                     "source_name": safe_get(item, "source_name", "unknown"),
@@ -577,15 +579,15 @@ class GenericVectorService:
 
                 metadatas.append(cleaned_metadata)
 
-            # Store in ChromaDB - use upsert to handle duplicate IDs
+            # Store in ChromaDB - use upsert to handle updates
             collection.upsert(
                 ids=ids,
-                embeddings=embeddings,
+                embeddings=unique_embeddings,
                 documents=documents,
                 metadatas=metadatas
             )
 
-            logger.info(f"Stored {len(content_items)} items in collection '{collection_name}'")
+            logger.info(f"Stored {len(unique_items)} items in collection '{collection_name}'")
             return True
 
         except Exception as e:

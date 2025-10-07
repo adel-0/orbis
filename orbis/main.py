@@ -14,7 +14,7 @@ from app.api.routers import (
     process,
     scheduler,
 )
-from app.db.session import DatabaseManager
+from app.db.session import DatabaseManager, get_db_session
 from config.settings import settings
 from core.services.config_loader import ConfigLoader
 from utils.app_setup import register_routers, setup_cors
@@ -49,7 +49,8 @@ async def lifespan(app: FastAPI):
             from infrastructure.data_processing.data_source_service import (
                 DataSourceService,
             )
-            with DataSourceService() as ds_service:
+            with get_db_session() as db:
+                ds_service = DataSourceService(db)
                 wiki_sources = [ds.name for ds in ds_service.get_enabled_sources() if ds.source_type == "azdo_wiki"]
 
             ingestion_result = await ingestion_service.ingest_all_sources(

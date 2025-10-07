@@ -65,35 +65,3 @@ LLM_MAX_OUTPUT_TOKENS: int = 16000  # Maximum tokens for LLM response generation
 # Rerank service
 DEFAULT_RERANK_MODEL: str = "BAAI/bge-reranker-v2-m3"
 DEFAULT_RERANK_BATCH_SIZE: int = 16
-
-# HTML cleaning utility function
-def clean_html_content(html_content: str) -> str:
-    """
-    Clean HTML content from strings - consolidated from multiple implementations.
-
-    Args:
-        html_content: String that may contain HTML tags and entities
-
-    Returns:
-        Cleaned plain text string
-    """
-    if not html_content or not isinstance(html_content, str):
-        return html_content or ""
-
-    import html
-    import re
-
-    # Decode common HTML entities
-    content = html.unescape(html_content)
-
-    # Remove all HTML tags
-    content = re.sub(r'<[^>]*>', '', content)
-
-    # Remove empty or redundant tags (if any remain)
-    content = re.sub(r'<([a-zA-Z0-9]+)>\s*</\1>', '', content)
-
-    # Collapse multiple spaces and newlines into single spaces
-    content = re.sub(r'\s+', ' ', content)
-
-    # Trim whitespace
-    return content.strip()

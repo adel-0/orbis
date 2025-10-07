@@ -10,21 +10,12 @@ from app.api.dependencies import (
 from app.db.models import DataSource
 from app.db.session import get_db_session
 from core.schemas import EmbedRequest, EmbedResponse
-from core.services.generic_content_service import GenericContentService
-from infrastructure.connectors.azure_devops.work_item_service import WorkItemService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="", tags=["embedding"])
-
-
-def _load_content():
-    """Load all content for embedding"""
-    with GenericContentService() as content_service:
-        all_content = content_service.get_all_content_for_embedding()
-        return all_content
 
 
 @router.post("/embed", response_model=EmbedResponse, dependencies=[Depends(require_api_key)])

@@ -2,13 +2,8 @@
 Configuration management for Orbis using SQLite database.
 """
 
-import logging
-
 from dotenv import load_dotenv
 
-from app.db.models import DataSource as DataSourceModel
-from app.db.session import DatabaseManager
-from infrastructure.data_processing.data_source_service import DataSourceService
 from utils.env import get_env, get_env_list
 
 # Load environment variables from .env file
@@ -79,96 +74,6 @@ class Settings:
 
     # Optional encryption key for sensitive data at rest (Fernet key)
     ENCRYPTION_KEY: str = get_env("ENCRYPTION_KEY", "")
-
-    def __init__(self):
-        # Initialize database on first use
-        self._ensure_database_initialized()
-
-    def _ensure_database_initialized(self):
-        """Ensure database is initialized"""
-        try:
-            DatabaseManager.init_database()
-        except Exception as e:
-            logging.getLogger(__name__).warning(
-                f"Failed to initialize database: {e}"
-            )
-
-
-
-
-    def _build_auth_kwargs(self, source: DataSourceModel) -> dict:
-        """Build authentication kwargs based on auth type"""
-        auth_kwargs = {}
-        auth_type = source.config.get('auth_type', 'pat')
-        if auth_type == "pat":
-            auth_kwargs['pat'] = source.config.get('pat')
-        elif auth_type == "oauth2":
-            auth_kwargs.update({
-                'client_id': source.config.get('client_id'),
-                'client_secret': source.config.get('client_secret'),
-                'tenant_id': source.config.get('tenant_id')
-            })
-        return auth_kwargs
-
-    def save_data_sources(self, data_sources: list[DataSourceModel]):
-        """Save data sources to database"""
-        try:
-            with DataSourceService() as service:
-                # Get existing sources
-                existing_sources = {ds.name: ds for ds in service.get_all_data_sources()}
-
-                # Update or create sources
-                for source in data_sources:
-                    base_kwargs = {
-                        'organization': source.config.get('organization'),
-                        'project': source.config.get('project'),
-                        'auth_type': source.config.get('auth_type', 'pat'),
-                        'query_ids': source.config.get('query_ids'),
-                        'enabled': source.enabled
-                    }
-
-                    if source.name in existing_sources:
-                        # Update existing
-                        update_kwargs = {**base_kwargs, **self._build_auth_kwargs(source)}
-                        service.update_data_source(source.name, **update_kwargs)
-                    else:
-                        # Create new
-                        create_kwargs = {'name': source.name, **base_kwargs, **self._build_auth_kwargs(source)}
-                        service.create_data_source(**create_kwargs)
-
-                # Remove sources that are no longer in the list
-                source_names = {source.name for source in data_sources}
-                for existing_name in existing_sources:
-                    if existing_name not in source_names:
-                        service.delete_data_source(existing_name)
-
-        except Exception as e:
-            logging.getLogger(__name__).error(
-                f"Failed to save data sources to database: {e}"
-            )
-            raise
-
-    def add_data_source(self, data_source: DataSourceModel):
-        """Add a new data source"""
-        try:
-            with DataSourceService() as service:
-                create_kwargs = {
-                    'name': data_source.name,
-                    'organization': data_source.config.get('organization'),
-                    'project': data_source.config.get('project'),
-                    'auth_type': data_source.config.get('auth_type', 'pat'),
-                    'query_ids': data_source.config.get('query_ids'),
-                    'enabled': data_source.enabled,
-                    **self._build_auth_kwargs(data_source)
-                }
-                service.create_data_source(**create_kwargs)
-        except ValueError as e:
-            raise e
-        except Exception as e:
-            logging.getLogger(__name__).error(
-                f"Failed to add data source: {e}"
-            )
-            raise
 
 
 # Global settings instance

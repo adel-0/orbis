@@ -10,6 +10,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from app.db.session import get_db_session
 from config.settings import settings
 from core.agents.wiki_summarization import WikiSummarizationService
 from core.schemas import ProjectContext, ScopeAnalysisResult, WikiSummary
@@ -118,7 +119,8 @@ class ScopeAnalyzer:
     def _is_auto_summarization_enabled(self) -> bool:
         """Check if auto-summarization is enabled for any azdo_wiki connector"""
         try:
-            with DataSourceService() as ds_service:
+            with get_db_session() as db:
+                ds_service = DataSourceService(db)
                 # Get all enabled data sources and filter by azdo_wiki type
                 all_sources = ds_service.get_all_data_sources(enabled_only=True)
                 wiki_sources = [source for source in all_sources if source.source_type == "azdo_wiki"]
