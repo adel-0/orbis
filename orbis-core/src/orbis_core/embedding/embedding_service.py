@@ -214,5 +214,26 @@ class EmbeddingService:
         if not self.model:
             raise RuntimeError("Embedding model not loaded")
 
+        # Log VRAM usage before embedding
+        try:
+            if self.device == "cuda" and self._torch and self._torch.cuda.is_available():
+                mem_allocated = self._torch.cuda.memory_allocated() / 1024**3
+                mem_reserved = self._torch.cuda.memory_reserved() / 1024**3
+                logger.info(f"VRAM before embedding: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
+        except:
+            pass
+
         # Use asyncio.to_thread to make the sync call async
-        return await asyncio.to_thread(self.encode_single_text, query)
+        result = await asyncio.to_thread(self.encode_single_text, query)
+
+        # Log VRAM usage after embedding
+        try:
+            if self.device == "cuda" and self._torch and self._torch.cuda.is_available():
+                mem_allocated = self._torch.cuda.memory_allocated() / 1024**3
+                mem_reserved = self._torch.cuda.memory_reserved() / 1024**3
+                logger.info(f"VRAM after embedding: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
+                self._torch.cuda.empty_cache()
+        except:
+            pass
+
+        return result

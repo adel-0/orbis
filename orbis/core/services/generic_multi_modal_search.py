@@ -29,7 +29,7 @@ from infrastructure.storage.cross_collection_rerank_service import (
 )
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
-from infrastructure.storage.rerank_service import RerankService
+from orbis_core.search import RerankService
 
 logger = logging.getLogger(__name__)
 

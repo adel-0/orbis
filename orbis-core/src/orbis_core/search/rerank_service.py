@@ -202,20 +202,58 @@ class RerankService:
         assert self.model is not None
 
         try:
+            # Log VRAM usage before reranking
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    mem_allocated = torch.cuda.memory_allocated() / 1024**3
+                    mem_reserved = torch.cuda.memory_reserved() / 1024**3
+                    logger.info(f"VRAM before reranking: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
+            except:
+                pass
+
             # Check if query needs chunking
             if should_chunk_text(query, self.max_chunk_size, tokenizer=self.tokenizer):
                 logger.info(f"Query length ({len(self.tokenizer.encode(query))} tokens) exceeds chunk size, using chunked reranking")
                 scores = self._rerank_with_chunked_query(query, items)
             else:
-                # Use single-pass approach for short queries
+                # Use batch_size=1 to minimize VRAM usage
+                logger.info(f"Reranking {len(items)} items with batch_size=1")
                 pairs = self._build_pairs(query, items)
-                scores = self.model.predict(
-                    pairs,
-                    batch_size=1,
-                    convert_to_numpy=True,
-                    show_progress_bar=False,
-                )
-                scores = list(scores)
+
+                # Process in smaller chunks to avoid VRAM accumulation
+                chunk_size = 16
+                all_scores = []
+                for i in range(0, len(pairs), chunk_size):
+                    chunk_pairs = pairs[i:i+chunk_size]
+                    chunk_scores = self.model.predict(
+                        chunk_pairs,
+                        batch_size=1,
+                        convert_to_numpy=True,
+                        show_progress_bar=False,
+                    )
+                    all_scores.extend(list(chunk_scores))
+
+                    # Clear CUDA cache after each chunk
+                    try:
+                        import torch
+                        if torch.cuda.is_available():
+                            torch.cuda.empty_cache()
+                    except:
+                        pass
+
+                scores = all_scores
+
+            # Log VRAM usage after reranking
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    mem_allocated = torch.cuda.memory_allocated() / 1024**3
+                    mem_reserved = torch.cuda.memory_reserved() / 1024**3
+                    logger.info(f"VRAM after reranking: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
+                    torch.cuda.empty_cache()
+            except:
+                pass
 
             # Attach scores and sort
             for item, score in zip(items, scores):

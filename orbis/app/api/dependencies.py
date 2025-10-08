@@ -10,9 +10,9 @@ from core.agents.summary_agent import SearchResultsSummarizer
 from core.services.generic_data_ingestion import GenericDataIngestionService
 from infrastructure.data_processing.scheduler_service import SchedulerService
 from orbis_core.llm.openai_client import OpenAIClientService
+from orbis_core.search import RerankService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
-from infrastructure.storage.rerank_service import RerankService
 
 
 # Simple cached service creation - replaces complex service container

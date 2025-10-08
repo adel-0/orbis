@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from core.schemas import ScopeAnalysisResult, SearchResult
-from infrastructure.storage.rerank_service import RerankService
+from orbis_core.search import RerankService
 
 logger = logging.getLogger(__name__)
 
@@ -55,34 +55,34 @@ class CrossCollectionReranker:
         """
         if not all_results:
             return []
-        
+
         logger.info(f"Reranking {len(all_results)} results")
-        
+
         try:
             # Single rerank step
             if self.rerank_service.is_loaded():
                 reranked_results = await self._rerank_with_service(all_results, query)
             else:
                 reranked_results = all_results
-            
+
             # Apply scope boost if available
             if scope_analysis:
                 self._apply_scope_boost(reranked_results, scope_analysis)
-            
+
             # Sort by final score
-            sorted_results = sorted(reranked_results, 
-                                  key=lambda x: getattr(x, 'final_score', x.similarity_score), 
+            sorted_results = sorted(reranked_results,
+                                  key=lambda x: getattr(x, 'final_score', x.similarity_score),
                                   reverse=True)
-            
+
             # Apply diversity filter if enabled
             if enable_diversity:
                 final_results = apply_diversity_filter(sorted_results, max_per_type=target_count // 2 + 1)
             else:
                 final_results = sorted_results
-            
+
             logger.info(f"Reranking completed: {len(final_results)} final results")
             return final_results[:target_count]
-            
+
         except Exception as e:
             logger.error(f"Error in reranking: {e}")
             return sorted(all_results, key=lambda x: x.similarity_score, reverse=True)[:target_count]

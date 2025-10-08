@@ -26,9 +26,9 @@ from core.schemas import (
 from core.services.generic_multi_modal_search import GenericMultiModalSearch
 from core.services.project_detection import ProjectDetectionService
 from orbis_core.llm.openai_client import OpenAIClientService
+from orbis_core.search import RerankService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
-from infrastructure.storage.rerank_service import RerankService
 from utils.constants import (
     ORCHESTRATOR_MIN_CONFIDENCE_THRESHOLD,
     ORCHESTRATOR_TIMEOUT_SECONDS,
