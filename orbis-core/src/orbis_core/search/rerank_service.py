@@ -124,6 +124,7 @@ class RerankService:
                 q_chunk_weight = query_chunk_weights[q_chunk_idx] / total_query_weight
 
                 # Process each item individually
+                predict_call_count = 0  # Track calls to clear cache frequently
                 for item_idx in range(len(items)):
                     item = items[item_idx]
                     candidate_text = item.get("concatenated_text", "")
@@ -169,10 +170,21 @@ class RerankService:
                         # Weighted contribution
                         item_score_for_q_chunk += pair_score * c_chunk_weight
 
+                        predict_call_count += 1
+
+                        # Clear CUDA cache every 8 predict calls to prevent VRAM accumulation
+                        if predict_call_count % 8 == 0:
+                            try:
+                                import torch
+                                if torch.cuda.is_available():
+                                    torch.cuda.empty_cache()
+                            except:
+                                pass
+
                     # Add weighted score from this query chunk
                     final_scores[item_idx] += item_score_for_q_chunk * q_chunk_weight
 
-                # Clear CUDA cache
+                # Final CUDA cache clear for this query chunk
                 try:
                     import torch
                     if torch.cuda.is_available():
