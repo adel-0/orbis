@@ -32,6 +32,22 @@ The repo contains currently two application:
 
 In addition, the repo contains Orbis-core, a library with components common to both applications. The purpose of Orbis-core is not to hold code for both, it is strictly to share common components that are not customized within orbis-core.
 
+### Orbis-Core Development Guidelines
+
+When deciding what belongs in orbis-core versus application code:
+
+**Include in Orbis-Core:**
+- Generic, reusable infrastructure used by BOTH applications without customization (e.g., embedding generation, search algorithms, LLM clients, Azure DevOps connectors)
+- Components must be configuration-driven with parameters rather than hardcoded values
+- Must contain zero application-specific logic
+
+**Keep in Applications (orbis/ or orbis-search/):**
+- Application-specific customizations or business logic
+- Features needed by only one application
+- Code requiring customization should wrap orbis-core components at the application layer
+
+When modifying orbis-core, always consider impact on both applications. Search for usage across both orbis and orbis-search directories, and update all consumers if changing APIs. Use editable workspace dependencies to test changes immediately in both applications.
+
 ## Implementation Lessons Learned
 
 Critical success factors identified from the project's evolution include: adopting configuration-driven architecture over hardcoded implementations to achieve true modularity, core principle: KISS. When implementing fixes, always distinguish between band-aid solutions and root cause fixes, think about whether you are addressing the underlying issue and not the symptom. Avoid creating technical debt and inconsistencies.
