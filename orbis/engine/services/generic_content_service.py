@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.db.models import Content as ContentModel
 from app.db.models import DataSource
 from app.db.session import get_db_session
-from core.schemas import BaseContent, Ticket, WikiPageContent
+from engine.schemas import BaseContent, Ticket, WikiPageContent
 
 logger = logging.getLogger(__name__)
 

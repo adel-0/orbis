@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_embedding_service, get_vector_service
-from core.schemas import HealthResponse
+from engine.schemas import HealthResponse
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 

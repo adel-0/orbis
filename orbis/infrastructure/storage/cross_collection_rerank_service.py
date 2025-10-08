@@ -7,7 +7,7 @@ Single-stage reranking with optional diversity filtering.
 import logging
 from typing import Any
 
-from core.schemas import ScopeAnalysisResult, SearchResult
+from engine.schemas import ScopeAnalysisResult, SearchResult
 from orbis_core.search import RerankService
 
 logger = logging.getLogger(__name__)

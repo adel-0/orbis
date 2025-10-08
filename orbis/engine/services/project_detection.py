@@ -6,7 +6,7 @@ Simple area path based project detection using basic string matching.
 
 import logging
 
-from core.schemas import ProjectContext
+from engine.schemas import ProjectContext
 from utils.constants import AREA_PATH_MAPPINGS, PROJECT_WIKI_REPOS
 
 logger = logging.getLogger(__name__)

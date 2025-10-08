@@ -61,7 +61,7 @@ The system is built around a modular agentic RAG architecture with clear separat
 │   └── db/
 │       ├── models.py                # Database models
 │       └── session.py               # Database session management
-├── core/
+├── engine/
 │   ├── services/                    # Core business logic
 │   │   ├── agentic_rag_orchestrator.py      # Main orchestration engine
 │   │   ├── generic_data_ingestion.py        # Multi-source data ingestion

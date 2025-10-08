@@ -39,7 +39,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
 
 ### Core Services
 
-#### LLM Routing Agent (`core/agents/llm_routing_agent.py`) - **590 lines**
+#### LLM Routing Agent (`engine/agents/llm_routing_agent.py`) - **590 lines**
 - **Purpose**: Autonomous AI-powered query analysis and routing
 - **Features**:
   - Advanced query understanding using Azure OpenAI
@@ -48,14 +48,14 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Repository profiling and recommendations
   - Confidence-based routing decisions
 
-#### Project Detection Service (`core/services/project_detection.py`)
+#### Project Detection Service (`engine/services/project_detection.py`)
 - **Purpose**: Simple area path-based project identification
 - **Features**:
   - Area path pattern matching for Swiss projects (SG, VS)
   - Streamlined detection logic
   - Wiki repository mapping (SG → "Wiki.SG", VS → "Wiki.VS")
 
-#### Wiki Summarization Service (`core/services/wiki_summarization.py`) - **485 lines**
+#### Wiki Summarization Service (`engine/services/wiki_summarization.py`) - **485 lines**
 - **Purpose**: Large-scale wiki content processing and summarization
 - **Features**:
   - Handles hundreds of thousands of tokens
@@ -63,7 +63,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Basic caching for performance
   - Component extraction and analysis
 
-#### Ticket Scope Analyzer (`core/agents/scope_analyzer.py`) - **431 lines**
+#### Ticket Scope Analyzer (`engine/agents/scope_analyzer.py`) - **431 lines**
 - **Purpose**: Advanced ticket scope and intent analysis
 - **Features**:
   - Enhanced LLM analysis with documentation context
@@ -71,7 +71,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Structured analysis with confidence scoring
   - Dynamic source type recommendations
 
-#### Generic Multi-Modal Search Service (`core/services/generic_multi_modal_search.py`) - **381 lines**
+#### Generic Multi-Modal Search Service (`engine/services/generic_multi_modal_search.py`) - **381 lines**
 - **Purpose**: Configuration-driven search across any data source types
 - **Features**:
   - Works with ANY registered data source types
@@ -79,7 +79,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Cross-collection reranking service integration
   - Parallel search with configurable concurrency limits
 
-#### Documentation Aggregator (`core/agents/documentation_aggregator.py`) - **528 lines**
+#### Documentation Aggregator (`engine/agents/documentation_aggregator.py`) - **528 lines**
 - **Purpose**: Advanced multi-source result aggregation
 - **Features**:
   - Enhanced source ranking and filtering algorithms
@@ -87,7 +87,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Cross-collection result integration
   - Comprehensive summary generation with metadata
 
-#### Agentic RAG Orchestrator (`core/agents/orchestrator.py`) - **399 lines**
+#### Agentic RAG Orchestrator (`engine/agents/orchestrator.py`) - **399 lines**
 - **Purpose**: Main workflow coordinator with enhanced capabilities
 - **Features**:
   - Complete workflow orchestration with 120-second timeout
@@ -95,7 +95,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Performance monitoring and detailed logging
   - Health checking and comprehensive status reporting
 
-#### Generic Data Ingestion Service (`core/services/generic_data_ingestion.py`) - **379 lines**
+#### Generic Data Ingestion Service (`engine/services/generic_data_ingestion.py`) - **379 lines**
 - **Purpose**: Universal data ingestion across any data source types
 - **Features**:
   - Configuration-driven ingestion workflows
@@ -103,7 +103,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
   - Support for any registered connector type
   - Automated ingestion scheduling and monitoring
 
-#### Document Processor Service (`core/services/document_processor.py`) - **168 lines**
+#### Document Processor Service (`engine/services/document_processor.py`) - **168 lines**
 - **Purpose**: Universal document processing utilities
 - **Features**:
   - Multi-format document handling
@@ -120,7 +120,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
 
 ### Enhanced Models & Database Schema
 
-#### Core Schemas (`core/models/schemas.py`)
+#### Core Schemas (`engine/models/schemas.py`)
 - `DataSourceType`: Dynamic enum for any data source types
 - `ProjectContext`: Project detection results with area path mapping
 - `ScopeAnalysisResult`: Enhanced scope analysis with code search detection
@@ -156,7 +156,7 @@ A multi-agent RAG system providing intelligent ticket analysis through configura
 
 The system now uses a centralized configuration approach that eliminates hardcoded assumptions:
 
-#### Data Source Registry (`core/config/data_sources.py`)
+#### Data Source Registry (`engine/config/data_sources.py`)
 ```python
 REGISTERED_DATA_SOURCES = {
     "azdo_workitems": {

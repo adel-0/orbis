@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from config.settings import settings
-from core.schemas import ScopeAnalysisResult, SourceReference
-from core.services.generic_multi_modal_search import GenericAggregatedSearchResult
+from engine.schemas import ScopeAnalysisResult, SourceReference
+from engine.services.generic_multi_modal_search import GenericAggregatedSearchResult
 from orbis_core.llm.openai_client import OpenAIClientService
 
 logger = logging.getLogger(__name__)

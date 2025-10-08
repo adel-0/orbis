@@ -13,8 +13,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_agentic_rag_orchestrator, require_api_key
-from core.agents.orchestrator import AgenticRAGOrchestrator
-from core.schemas import AgenticRAGRequest, AgenticRAGResponse
+from engine.agents.orchestrator import AgenticRAGOrchestrator
+from engine.schemas import AgenticRAGRequest, AgenticRAGResponse
 
 logger = logging.getLogger(__name__)
 

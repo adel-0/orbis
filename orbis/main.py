@@ -16,7 +16,7 @@ from app.api.routers import (
 )
 from app.db.session import DatabaseManager, get_db_session
 from config.settings import settings
-from core.services.config_loader import ConfigLoader
+from engine.services.config_loader import ConfigLoader
 from utils.app_setup import register_routers, setup_cors
 from orbis_core.utils.logging import get_logger, setup_logging
 
@@ -38,8 +38,8 @@ async def lifespan(app: FastAPI):
 
         # Auto-ingest wiki data and pre-compute summaries for fast contextual analysis
         try:
-            from core.agents.wiki_summarization import WikiSummarizationService
-            from core.services.generic_data_ingestion import GenericDataIngestionService
+            from engine.agents.wiki_summarization import WikiSummarizationService
+            from engine.services.generic_data_ingestion import GenericDataIngestionService
 
             # First, ensure wiki data is ingested (without embedding - that happens via /embed endpoint)
             logger.info("🔄 Auto-ingesting wiki data...")

@@ -9,14 +9,14 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from core.config.data_sources import (
+from engine.config.data_sources import (
     get_all_collection_names,
     get_collection_name,
     get_data_source_config,
     is_valid_source_type,
     list_data_source_types,
 )
-from core.schemas import (
+from engine.schemas import (
     BaseContent,
     ScopeAnalysisResult,
     SearchPlan,
@@ -337,7 +337,7 @@ class GenericMultiModalSearch:
         Returns:
             GenericAggregatedSearchResult with intelligently routed results
         """
-        from core.schemas import SearchPlan
+        from engine.schemas import SearchPlan
         
         logger.info(f"Starting search with {len(routing_recommendations)} routing recommendations")
         
@@ -469,7 +469,7 @@ class GenericMultiModalSearch:
             logger.debug(f"Searching source type: {source_type}")
 
             # Get collection name from connector (self-describing)
-            from core.config.data_sources import get_collection_name
+            from engine.config.data_sources import get_collection_name
             collection_name = get_collection_name(source_type)
 
             # Process filters and convert source_names to ChromaDB where clause

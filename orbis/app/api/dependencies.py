@@ -4,10 +4,10 @@ from functools import lru_cache
 from fastapi import HTTPException, Request
 
 from config.settings import settings
-from core.agents.llm_routing_agent import QueryRoutingAgent
-from core.agents.orchestrator import AgenticRAGOrchestrator
-from core.agents.summary_agent import SearchResultsSummarizer
-from core.services.generic_data_ingestion import GenericDataIngestionService
+from engine.agents.llm_routing_agent import QueryRoutingAgent
+from engine.agents.orchestrator import AgenticRAGOrchestrator
+from engine.agents.summary_agent import SearchResultsSummarizer
+from engine.services.generic_data_ingestion import GenericDataIngestionService
 from infrastructure.data_processing.scheduler_service import SchedulerService
 from orbis_core.llm.openai_client import OpenAIClientService
 from orbis_core.search import RerankService

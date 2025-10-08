@@ -38,8 +38,8 @@ from urllib.parse import quote
 
 import aiohttp
 
-from core.agents.summary_agent import SearchResultsSummarizer
-from core.schemas import Ticket
+from engine.agents.summary_agent import SearchResultsSummarizer
+from engine.schemas import Ticket
 from orbis_core.connectors.azure_devops import AzureDevOpsClient
 
 # -----------------------------

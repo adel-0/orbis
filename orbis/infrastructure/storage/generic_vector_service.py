@@ -14,7 +14,7 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 
 from config.settings import settings
-from core.config.data_sources import (
+from engine.config.data_sources import (
     get_all_collection_names,
     get_collection_name,
     is_valid_source_type,

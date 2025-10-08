@@ -14,7 +14,7 @@ from typing import Any
 from app.db.models import WikiSummaryCache
 from app.db.session import get_db_session
 from config.settings import settings
-from core.schemas import WikiSummary
+from engine.schemas import WikiSummary
 from orbis_core.llm.openai_client import OpenAIClientService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService

@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 from app.db.models import Content as ContentModel
 from app.db.models import DataSource as DataSourceModel
 from app.db.session import get_db_session
-from core.schemas import Ticket
-from core.services.generic_content_service import GenericContentService
+from engine.schemas import Ticket
+from engine.services.generic_content_service import GenericContentService
 
 from orbis_core.connectors.azure_devops.constants import DEFAULT_DB_BATCH_SIZE
 

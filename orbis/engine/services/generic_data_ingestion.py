@@ -13,7 +13,7 @@ from sqlalchemy import func
 
 from app.db.models import IngestionLog
 from app.db.session import get_db_session
-from core.config.data_sources import get_data_source_config
+from engine.config.data_sources import get_data_source_config
 from infrastructure.data_processing.data_source_service import DataSourceService
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
@@ -165,7 +165,7 @@ class GenericDataIngestionService:
                 return {'success': True, 'processed_items': 0}
 
             # Convert dictionary items to BaseContent objects for the embedding service
-            from core.schemas import BaseContent, Ticket, WikiPageContent
+            from engine.schemas import BaseContent, Ticket, WikiPageContent
 
             base_content_items: list[BaseContent] = []
             for item in content_items:

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
 from config.settings import settings
-from core.schemas import BaseContent
+from engine.schemas import BaseContent
 from infrastructure.storage.generic_vector_service import GenericVectorService
 from orbis_core.embedding import EmbeddingService as CoreEmbeddingService
 from orbis_core.utils.progress_tracker import ProgressTracker

@@ -10,7 +10,7 @@ from datetime import datetime, time, timedelta
 from typing import Any
 
 from config.settings import settings
-from core.services.generic_data_ingestion import GenericDataIngestionService
+from engine.services.generic_data_ingestion import GenericDataIngestionService
 
 logger = logging.getLogger(__name__)
 

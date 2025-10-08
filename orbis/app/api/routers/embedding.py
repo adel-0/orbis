@@ -9,7 +9,7 @@ from app.api.dependencies import (
 )
 from app.db.models import DataSource
 from app.db.session import get_db_session
-from core.schemas import EmbedRequest, EmbedResponse
+from engine.schemas import EmbedRequest, EmbedResponse
 from infrastructure.storage.embedding_service import EmbeddingService
 from infrastructure.storage.generic_vector_service import GenericVectorService
 

@@ -13,18 +13,18 @@ import logging
 import time
 
 from config.settings import settings
-from core.agents.documentation_aggregator import DocumentationAggregator
-from core.agents.llm_routing_agent import QueryRoutingAgent
-from core.agents.scope_analyzer import ScopeAnalyzer
-from core.schemas import (
+from engine.agents.documentation_aggregator import DocumentationAggregator
+from engine.agents.llm_routing_agent import QueryRoutingAgent
+from engine.agents.scope_analyzer import ScopeAnalyzer
+from engine.schemas import (
     AgenticRAGRequest,
     AgenticRAGResponse,
     ProjectContext,
     ScopeAnalysisResult,
     SourceReference,
 )
-from core.services.generic_multi_modal_search import GenericMultiModalSearch
-from core.services.project_detection import ProjectDetectionService
+from engine.services.generic_multi_modal_search import GenericMultiModalSearch
+from engine.services.project_detection import ProjectDetectionService
 from orbis_core.llm.openai_client import OpenAIClientService
 from orbis_core.search import RerankService
 from infrastructure.storage.embedding_service import EmbeddingService
@@ -282,7 +282,7 @@ class AgenticRAGOrchestrator:
         except Exception as e:
             logger.error(f"Error in multi-modal search: {e}")
             # Return empty search results
-            from core.services.generic_multi_modal_search import (
+            from engine.services.generic_multi_modal_search import (
                 GenericAggregatedSearchResult,
             )
             return GenericAggregatedSearchResult()
@@ -325,7 +325,7 @@ Please contact technical support for assistance with this issue."""
                              project_context: ProjectContext | None,
                              start_time: float) -> AgenticRAGResponse:
         """Create an error response"""
-        from core.schemas import ScopeAnalysisResult
+        from engine.schemas import ScopeAnalysisResult
 
         processing_time = int((time.time() - start_time) * 1000)
 

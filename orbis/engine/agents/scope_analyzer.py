@@ -12,9 +12,9 @@ from pathlib import Path
 
 from app.db.session import get_db_session
 from config.settings import settings
-from core.agents.wiki_summarization import WikiSummarizationService
-from core.schemas import ProjectContext, ScopeAnalysisResult, WikiSummary
-from core.services.project_detection import ProjectDetectionService
+from engine.agents.wiki_summarization import WikiSummarizationService
+from engine.schemas import ProjectContext, ScopeAnalysisResult, WikiSummary
+from engine.services.project_detection import ProjectDetectionService
 from infrastructure.data_processing.data_source_service import DataSourceService
 from orbis_core.llm.openai_client import OpenAIClientService
 from infrastructure.storage.embedding_service import EmbeddingService
@@ -59,7 +59,7 @@ class ScopeAnalyzer:
 
 
         # Get available data sources dynamically from configuration
-        from core.config.data_sources import list_data_source_types
+        from engine.config.data_sources import list_data_source_types
         self.available_source_types = list_data_source_types()
 
         # Initialize prompt loader

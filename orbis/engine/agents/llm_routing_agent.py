@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from config.settings import settings
-from core.schemas import (
+from engine.schemas import (
     ContextAnalysisResponse,
     DataSourceRecommendation,
     SearchPlan,
@@ -149,7 +149,7 @@ class QueryRoutingAgent:
 
     def _generate_instance_description(self, data_source) -> str:
         """Generate description using configuration and context tags only"""
-        from core.config.data_sources import get_data_source_config
+        from engine.config.data_sources import get_data_source_config
         
         try:
             # Get generic source type configuration
@@ -173,7 +173,7 @@ class QueryRoutingAgent:
 
     def _generate_instance_content_summary(self, data_source) -> str:
         """Generate content summary using configuration hints and context tags"""
-        from core.config.data_sources import get_data_source_config
+        from engine.config.data_sources import get_data_source_config
         
         try:
             # Use searchable_content_hint from configuration
@@ -197,7 +197,7 @@ class QueryRoutingAgent:
 
     def _get_search_weight_for_source_type(self, source_type: str) -> float:
         """Get search weight for source type from configuration"""
-        from core.config.data_sources import get_priority_boost_for_source_type
+        from engine.config.data_sources import get_priority_boost_for_source_type
         return get_priority_boost_for_source_type(source_type)
 
 

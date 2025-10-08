@@ -19,7 +19,7 @@ graph TB
 
   %% Configuration-Driven Integration
   subgraph ConfigSystem[Configuration System ✅]
-    DSC[Data Source Config Registry<br/>core/config/data_sources.py]
+    DSC[Data Source Config Registry<br/>engine/config/data_sources.py]
     
     subgraph Configs[Active Configurations]
       WI_CFG[azdo_workitems:<br/>→ workitems_collection<br/>→ WorkItemService]
@@ -242,7 +242,7 @@ graph LR
 The system is now driven entirely by configuration. Adding a new data source requires only:
 
 ```python
-# In core/config/data_sources.py - ADD ONE CONFIG ENTRY:
+# In engine/config/data_sources.py - ADD ONE CONFIG ENTRY:
 "confluence_wiki": {
     "collection_name": "confluence_collection",
     "connector_module": "infrastructure.connectors.confluence.wiki_service", 

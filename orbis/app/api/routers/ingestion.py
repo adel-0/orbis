@@ -5,11 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_data_ingestion_service, require_api_key
 from app.db.session import get_db_session
-from core.schemas import (
+from engine.schemas import (
     DataIngestionRequest,
     DataIngestionResponse,
 )
-from core.services.generic_data_ingestion import GenericDataIngestionService
+from engine.services.generic_data_ingestion import GenericDataIngestionService
 from infrastructure.data_processing.data_source_service import DataSourceService
 
 logger = logging.getLogger(__name__)

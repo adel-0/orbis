@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from config.settings import settings
-from core.schemas import BaseContent
+from engine.schemas import BaseContent
 from orbis_core.llm.openai_client import OpenAIClientService
 from utils.prompt_loader import PromptLoader
 

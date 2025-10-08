@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.dependencies import get_scheduler_service, require_api_key
-from core.schemas import DataIngestionResponse, SchedulerStatusResponse
+from engine.schemas import DataIngestionResponse, SchedulerStatusResponse
 from infrastructure.data_processing.scheduler_service import SchedulerService
 
 logger = logging.getLogger(__name__)
