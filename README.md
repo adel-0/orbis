@@ -1,6 +1,8 @@
 # Orbis
 
-<img width="781" height="728" alt="orbis" src="https://github.com/user-attachments/assets/6db8f4c3-5c26-4c75-a583-d8ead46751dc" />
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/cb2da20e-761d-47b5-88f9-3ece0c8db7e0" alt="orbis_black" width="500" height="500" />
+</div>
 
 A modular search platform for Azure DevOps work items and wiki content, built as a monorepo workspace with shared infrastructure and specialized applications.
 
