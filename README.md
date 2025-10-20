@@ -14,7 +14,7 @@ A modular search platform for Azure DevOps work items and wiki content, built as
 
 **Orbis Search** - Hybrid search engine combining BM25 keyword search with semantic embeddings. Uses RRF and recency boosting for fast search without agentic overhead.
 
-**Orbis Core** - Shared library providing Azure DevOps connectors, embedding services, search components, LLM clients, database management, and utilities.
+**Orbis Core** - Shared library providing [Azure DevOps](https://azure.microsoft.com/en-us/products/devops) connectors, embedding services, search components, LLM clients, database management, and utilities.
 
 ### Feature Comparison
 
@@ -33,13 +33,13 @@ A modular search platform for Azure DevOps work items and wiki content, built as
 
 ### Technology Stack
 
-- Python 3.13+
-- FastAPI for REST APIs
-- SQLite with SQLAlchemy ORM
-- Sentence Transformers for local embeddings
-- Azure OpenAI for LLM operations
-- ChromaDB (Orbis) and BM25S (Orbis Search) for vector operations
-- UV for dependency management
+- [Python 3.13+](https://www.python.org/)
+- [FastAPI](https://fastapi.tiangolo.com/) for REST APIs
+- [SQLite](https://www.sqlite.org/) with [SQLAlchemy](https://www.sqlalchemy.org/) ORM
+- [Sentence Transformers](https://www.sbert.net/) for local embeddings
+- [Azure OpenAI](https://azure.microsoft.com/en-us/products/ai-services/openai-service) for LLM operations
+- [ChromaDB](https://www.trychroma.com/) (Orbis) and [BM25S](https://github.com/xhluca/bm25s) (Orbis Search) for vector operations
+- [UV](https://docs.astral.sh/uv/) for dependency management
 
 ## Running Applications
 
