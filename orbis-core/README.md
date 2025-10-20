@@ -1,64 +1,59 @@
 # Orbis Core
 
-Shared infrastructure library for Orbis applications, providing common functionality for data ingestion, embedding generation, search, and utilities.
+Shared infrastructure library for Orbis applications, providing common functionality for data ingestion, embedding generation, search, and utilities. Eliminates approximately 2,600 lines of code duplication.
 
-## Overview
-
-Orbis Core consolidates data ingestion, embedding generation, search capabilities, and utility functions previously duplicated across Orbis (agentic RAG) and Orbis Search applications. It follows a modular architecture with seven main components.
-
-For detailed documentation, see [ORBIS_CORE.md](../ORBIS_CORE.md) in the repository root.
-
-## Quick Start
-
-### Installation
-
-This package is part of the Orbis monorepo workspace and is installed automatically:
-
-```bash
-cd orbis/
-uv sync
-```
-
-### Basic Usage
-
-```python
-# Azure DevOps connector
-from orbis_core.connectors.azure_devops import AzureDevOpsClient
-
-client = AzureDevOpsClient(organization="myorg", pat="token")
-work_items = await client.get_work_items([123, 456])
-
-# Embedding service
-from orbis_core.embedding import EmbeddingService
-
-service = EmbeddingService(model_name="intfloat/multilingual-e5-small")
-embedding = service.encode_single_text("text to embed")
-
-# Search infrastructure
-from orbis_core.search import RerankService
-
-reranker = RerankService(model_name="mixedbread-ai/mxbai-rerank-base-v2")
-scores = reranker.rerank(query="user question", texts=candidate_docs)
-```
+See the [main README](../README.md) for workspace setup.
 
 ## Components
 
-- **connectors**: Azure DevOps REST API client with PAT and OAuth2 authentication
-- **embedding**: Local embedding generation using sentence-transformers with text chunking
-- **search**: BM25 keyword search, semantic reranking, and hybrid search with RRF
-- **llm**: Azure OpenAI client singleton with connection pooling
-- **database**: SQLAlchemy session factory and database initialization
-- **scheduling**: Background task scheduling for periodic operations
-- **utils**: Logging, token counting, content hashing, similarity metrics, progress tracking
+### Connectors
+**Azure DevOps Connector** - REST API client with PAT/OAuth2 authentication for work items, queries, and projects.
 
-## Documentation
+```python
+from orbis_core.connectors.azure_devops import AzureDevOpsClient
+client = AzureDevOpsClient(organization="myorg", pat="token")
+work_items = await client.get_work_items([123, 456])
+```
 
-See [ORBIS_CORE.md](../ORBIS_CORE.md) for:
-- Detailed component documentation
-- API reference and examples
-- Design principles
-- Dependencies and installation
+### Embedding
+**Embedding Service** - Local embedding generation with sentence-transformers, automatic chunking for long documents, CUDA/CPU auto-detection.
 
-## Version
+```python
+from orbis_core.embedding.embedding_service import EmbeddingService
+service = EmbeddingService(model_name="intfloat/multilingual-e5-small")
+embedding = service.encode_single_text("text")
+```
 
-Current version: **0.1.0**
+### Search
+**BM25 Service** - Fast keyword search.
+**Rerank Service** - Cross-encoder semantic reranking.
+**Hybrid Search Service** - Combines BM25 and semantic search with RRF and recency boosting.
+
+```python
+from orbis_core.search import BM25Service, RerankService, HybridSearchService
+```
+
+### LLM
+**OpenAI Client** - Singleton Azure OpenAI client with connection pooling.
+
+### Database
+**Database Manager** - SQLAlchemy session factory and initialization.
+**ContentEmbedding Model** - Tracks embedded content with change detection using content hashing.
+
+### Scheduling
+**Scheduler Service** - Background task scheduling for periodic operations.
+
+### Utils
+**Logging** - Structured logging configuration.
+**Token Utils** - tiktoken-based token counting and chunking.
+**Content Hash** - SHA256 hashing for change detection.
+**Similarity** - Cosine similarity and score normalization.
+**Progress Tracker** - Progress tracking with ETA for long operations.
+
+## Design Principles
+
+- Configuration-driven components with parameters instead of hardcoded values
+- Single source of truth eliminating duplication
+- Device-agnostic ML components with automatic CUDA/CPU detection
+- Token-aware text processing with automatic chunking
+- Production-tested components from live systems
