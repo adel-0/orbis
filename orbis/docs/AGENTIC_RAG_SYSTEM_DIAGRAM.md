@@ -109,47 +109,47 @@ sequenceDiagram
   participant DA as DocumentationAggregator
 
   API->>Orc: POST /process with content data
-  Note right of API: ✅ Input: {content, area_path, project_info}
-  
+  Note right of API: Input: content, area_path, project_info
+
   %% Project detection (ACTUAL - pattern-based, non-LLM)
   Orc->>PD: detect_project_from_area_path()
-  PD-->>Orc: ✅ ProjectInfo {project_code, confidence, area_patterns}
-  
+  PD-->>Orc: ProjectInfo with project_code, confidence
+
   %% Wiki context retrieval (ACTUAL - cached summaries)
   Orc->>Cache: get_cached_wiki_summaries(project_code)
-  Cache-->>Orc: ✅ Cached project wiki documentation summaries
-  
+  Cache-->>Orc: Cached project wiki summaries
+
   %% Scope analysis (ACTUAL - with wiki context)
   Orc->>SA: analyze_scope(content, wiki_context)
-  Note right of SA: ✅ Uses LLM service internally<br/>with cached wiki summaries
-  SA-->>Orc: ✅ ScopeAnalysis {search_intent, recommended_collections, filters}
-  
+  Note right of SA: Uses LLM service internally<br/>with cached wiki summaries
+  SA-->>Orc: ScopeAnalysis with search intent
+
   %% Multi-modal search (ACTUAL - configuration-driven)
   Orc->>Search: search_across_collections(query, collections, filters)
-  
+
   par Parallel search across active collections
     Search->>Vec: search(workitems_collection, query, filters)
-    Note right of Vec: ✅ Uses embedding service<br/>for vector similarity
+    Note right of Vec: Uses embedding service<br/>for vector similarity
     Search->>Vec: search(wiki_collection, query, filters)
   end
-  
-  Vec-->>Search: ✅ Results with confidence scores + metadata
-  
+
+  Vec-->>Search: Results with confidence scores and metadata
+
   %% Cross-collection reranking (ACTUAL)
   Search->>Rank: rerank_cross_collection_results(results)
-  Note right of Rank: ✅ Implemented reranking:<br/>- Score normalization<br/>- Source diversity<br/>- Relevance scoring
-  
-  Rank-->>Search: ✅ Reranked, normalized results
-  Search-->>Orc: ✅ SearchResults {results, confidence, sources}
-  
+  Note right of Rank: Implemented reranking<br/>with score normalization
+
+  Rank-->>Search: Reranked, normalized results
+  Search-->>Orc: SearchResults with confidence
+
   %% Documentation aggregation (ACTUAL)
   Orc->>DA: aggregate_documentation(search_results, original_content)
-  Note right of DA: ✅ Uses LLM service internally<br/>for response generation
-  DA-->>Orc: ✅ Final response with citations and confidence
-  
+  Note right of DA: Uses LLM service internally<br/>for response generation
+  DA-->>Orc: Final response with citations
+
   %% Return to API
-  Orc-->>API: ✅ AgenticRAGResponse {summary, sources, confidence}
-  API-->>API: ✅ JSON response with structured data
+  Orc-->>API: AgenticRAGResponse with summary
+  API-->>API: JSON response with structured data
 ```
 
 **Key Implementation Features:**

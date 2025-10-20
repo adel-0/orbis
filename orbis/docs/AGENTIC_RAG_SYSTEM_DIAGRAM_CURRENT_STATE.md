@@ -79,79 +79,79 @@ sequenceDiagram
   participant ADOResp as Azure DevOps Response
 
   User->>ADO: Add "Summon Orbis" tag
-  ADO->>Orc: AgenticRAGRequest {ticket_content, area_path, metadata}
-  
-  Note over Orc: 🎯 AGENTIC DECISION: Starting 4-step workflow
-  
-  %% Step 1: Project Detection (✅ Non-LLM Pattern Matching)
-  Orc->>PD: detect_project(area_path="Platform/St. Gallen/...")
+  ADO->>Orc: AgenticRAGRequest with ticket_content, area_path, metadata
+
+  Note over Orc: AGENTIC DECISION: Starting 4-step workflow
+
+  %% Step 1: Project Detection (Non-LLM Pattern Matching)
+  Orc->>PD: detect_project(area_path)
   Note right of PD: Simple pattern matching:<br/>- Area path prefix matching<br/>- Project code mapping
-  PD-->>Orc: ProjectContext {project_code: "SG", confidence: 0.95, source: "area_path"}
+  PD-->>Orc: ProjectContext with project_code SG, confidence 0.95
+
+  Note over Orc: AGENTIC DECISION: Project SG detected with 95 percent confidence
   
-  Note over Orc: 🎯 AGENTIC DECISION: Project SG detected with 95% confidence
-  
-  %% Step 2: Content Scope Analysis with Wiki Context (✅ LLM-Enhanced)
+  %% Step 2: Content Scope Analysis with Wiki Context (LLM-Enhanced)
   Orc->>SA: analyze_scope_and_intent(content, project_context)
-  
+
   Note right of SA: Getting project wiki context first
-  SA->>GVS: get_documents_by_metadata("wiki_collection", {project: "SG"}, limit=5)
+  SA->>GVS: get_documents_by_metadata(wiki_collection, filters, limit)
   GVS-->>SA: Project-specific wiki summaries
+
+  Note right of SA: Uses LLM service internally for<br/>analysis with content and wiki context
+  SA-->>Orc: ScopeAnalysisResult with scope, intent, sources
+
+  Note over Orc: AGENTIC DECISION: High confidence scope analysis<br/>recommends 2 source types
   
-  Note right of SA: Uses LLM service internally for<br/>analysis with content + wiki context
-  SA-->>Orc: ScopeAnalysisResult {<br/>scope: "Database connection timeout",<br/>intent: "troubleshoot_performance",<br/>confidence: 0.87,<br/>recommended_sources: ["azdo_workitems", "azdo_wiki"],<br/>components: ["database", "connection_pool"]<br/>}
-  
-  Note over Orc: 🎯 AGENTIC DECISION: High confidence scope analysis<br/>recommends 2 source types
-  
-  %% Step 3: Configuration-Driven Multi-Modal Search (✅ Implemented)
-  Orc->>GMMS: search_by_scope_analysis(query, scope_analysis, project_code="SG")
-  
+  %% Step 3: Configuration-Driven Multi-Modal Search (Implemented)
+  Orc->>GMMS: search_by_scope_analysis(query, scope_analysis, project_code)
+
   Note right of GMMS: Building search strategy from config
   GMMS->>GMMS: Resolve source types to collections via DataSourceConfig
-  
+
   Note right of GMMS: Generate query embedding
-  GMMS->>ES: generate_embeddings([ticket_content])
-  Note right of ES: Uses embedding service internally<br/>to generate query vector [1536 dims]
-  ES-->>GMMS: Query embedding [1536 dims]
-  
+  GMMS->>ES: generate_embeddings(ticket_content)
+  Note right of ES: Uses embedding service internally<br/>to generate query vector
+  ES-->>GMMS: Query embedding vector
+
   Note right of GMMS: Parallel searches with project filters
   par Parallel search across configured collections
-    GMMS->>GVS: search_by_source_type("azdo_workitems", filters={project: "SG"})
-    GMMS->>GVS: search_by_source_type("azdo_wiki", filters={project: "SG"})
+    GMMS->>GVS: search_by_source_type(azdo_workitems, filters)
+    GMMS->>GVS: search_by_source_type(azdo_wiki, filters)
   end
-  
+
   Note right of GVS: ChromaDB queries with cosine similarity
-  GVS-->>GMMS: workitem_results: 8 items, wiki_results: 5 items
-  
+  GVS-->>GMMS: Results from multiple collections
+
   Note right of GMMS: Cross-collection reranking
   GMMS->>CCR: rerank_cross_collection_results(all_results, query, scope_analysis)
-  
-  Note right of CCR: Sophisticated reranking process:<br/>1. Score normalization across collections<br/>2. Context-aware scoring<br/>3. Traditional reranking<br/>4. Source diversity optimization
-  CCR->>RS: rerank(results, query) [if model loaded]
+
+  Note right of CCR: Sophisticated reranking process:<br/>1. Score normalization<br/>2. Context-aware scoring<br/>3. Traditional reranking<br/>4. Source diversity optimization
+  CCR->>RS: rerank(results, query)
   RS-->>CCR: Reranked scores
-  CCR-->>GMMS: Final reranked results [top 5]
+  CCR-->>GMMS: Final reranked results
+
+  GMMS-->>Orc: GenericAggregatedSearchResult with results
+
+  Note over Orc: AGENTIC DECISION: Search complete,<br/>proceeding with top results for synthesis
   
-  GMMS-->>Orc: GenericAggregatedSearchResult {<br/>total_results: 13,<br/>collections_searched: ["workitems_collection", "wiki_collection"],<br/>reranked_results: top 5 items<br/>}
-  
-  Note over Orc: 🎯 AGENTIC DECISION: Search found 13 results,<br/>proceeding with top 5 for synthesis
-  
-  %% Step 4: LLM-Powered Documentation Aggregation (✅ Implemented)
+  %% Step 4: LLM-Powered Documentation Aggregation (Implemented)
   Orc->>DA: aggregate_and_summarize(ticket_content, scope_analysis, search_results)
-  
-  Note right of DA: Uses LLM service internally for synthesis<br/>with ticket + scope + search results
-  DA-->>Orc: (final_summary, source_references[5], confidence: 0.89)
-  
-  Note over Orc: 🎯 AGENTIC DECISION: High confidence final response<br/>ready for delivery
-  
-  %% Final Response Generation (✅ Implemented)
+
+  Note right of DA: Uses LLM service internally for synthesis<br/>with ticket, scope, and search results
+  DA-->>Orc: Final summary with source references and confidence
+
+  Note over Orc: AGENTIC DECISION: High confidence final response<br/>ready for delivery
+
+  %% Final Response Generation (Implemented)
   Orc-->>Orc: Build AgenticRAGResponse with all components
-  Orc-->>ADOResp: AgenticRAGResponse {<br/>project_context, scope_analysis,<br/>final_summary, source_refs,<br/>confidence: 0.89, processing_time: 1247ms<br/>}
-  
-  %% Azure DevOps Integration (✅ Implemented)
+  Orc-->>ADOResp: AgenticRAGResponse with complete data
+
+  %% Azure DevOps Integration (Implemented)
   ADOResp->>ADO: POST comment with formatted response
   ADOResp->>ADO: Remove "Summon Orbis" tag
   ADOResp->>ADO: Add "Orbis Summoned" tag
-  
-  Note over User,ADO: ✅ Complete agentic workflow delivered<br/>in ~1.2 seconds with high confidence
+
+  Note over User,ADO: Complete agentic workflow delivered<br/>with high confidence
 ```
 
 ### Key Implementation Details in Sequence
