@@ -14,6 +14,21 @@ A modular search platform for Azure DevOps work items and wiki content, built as
 
 **Orbis Core** - Shared library providing Azure DevOps connectors, embedding services, search components, LLM clients, database management, and utilities.
 
+### Feature Comparison
+
+| Feature | Orbis | Orbis Search |
+|---------|-------|--------------|
+| **Search Type** | Agentic RAG | Hybrid Search |
+| **Agents** | Multi-agent workflows | None |
+| **Vector Store** | ChromaDB | ChromaDB |
+| **Keyword Search** | No | BM25S |
+| **Semantic Search** | Yes | Yes |
+| **Reranking** | Cross-collection | Optional |
+| **Result Fusion** | Cross-collection merge | RRF |
+| **Recency Boosting** | No | Yes |
+| **Response Type** | Synthesized answer | Ranked results |
+| **Use Case** | Complex analysis | Fast lookup |
+
 ### Technology Stack
 
 - Python 3.13+
