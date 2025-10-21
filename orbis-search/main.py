@@ -2,7 +2,6 @@
 OnCall Copilot API - FastAPI bootstrap with modular routers and app.state services.
 """
 
-import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,16 +11,17 @@ from config import settings
 from app.db.session import DatabaseManager
 from app.core.container import create_container
 from app.api.routers import embedding, search, ingestion, scheduler, datasources, health, provider, field_discovery
+from orbis_core.utils.logging import get_logger, setup_logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+setup_logging()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         logger.info("Starting OnCall Copilot API...")
-        DatabaseManager.init_database()
+        DatabaseManager.init_database(default_db_name="orbis_search.db")
         container = create_container()
         app.state.service_container = container
         logger.info(f"Database: {DatabaseManager.get_database_info()}")

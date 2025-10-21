@@ -28,7 +28,7 @@ logger = get_logger()
 async def lifespan(app: FastAPI):
     try:
         logger.info("🚀 Starting Orbis API...")
-        DatabaseManager.init_database()
+        DatabaseManager.init_database(default_db_name="orbis.db")
         logger.info(f"✅ Database: {DatabaseManager.get_database_info()}")
 
         # Load data source configurations

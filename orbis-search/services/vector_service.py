@@ -6,6 +6,7 @@ import logging
 import os
 from config import settings
 from models.schemas import Ticket, SearchRequest
+from orbis_core.utils.similarity import normalize_cosine_similarity
 
 logger = logging.getLogger(__name__)
 
@@ -154,13 +155,8 @@ class VectorService:
                     metadata = results['metadatas'][0][i]
                     document = results['documents'][0][i]
                     distance = results['distances'][0][i]
-                    # Convert cosine distance to similarity score
-                    # For normalized embeddings: distance = 1 - cosine_similarity, where cosine_similarity ∈ [0,1]
-                    similarity_score = 1 - distance
-                    # Fallback for non-normalized embeddings where distance can be [0,2]
-                    if similarity_score < 0.0 or similarity_score > 1.0:
-                        similarity_score = 1.0 - (distance / 2.0)
-                    similarity_score = max(0.0, min(1.0, similarity_score))
+                    # Convert cosine distance to similarity score using orbis-core utility
+                    similarity_score = normalize_cosine_similarity(distance, clamp=True)
                     
                     # Parse comments from JSON
                     comments = json.loads(metadata.get('comments', '[]'))
