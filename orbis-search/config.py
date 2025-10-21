@@ -7,11 +7,11 @@ import logging
 from typing import List, Optional
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
 from app.db.session import DatabaseManager
 from services.data_source_service import DataSourceService, DataSource
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class Settings:

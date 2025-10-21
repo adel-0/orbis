@@ -151,7 +151,6 @@ class VectorService:
             processed_results = []
             if results['ids'] and results['ids'][0]:
                 for i in range(len(results['ids'][0])):
-                    ticket_id = results['ids'][0][i]
                     metadata = results['metadatas'][0][i]
                     document = results['documents'][0][i]
                     distance = results['distances'][0][i]
@@ -167,7 +166,7 @@ class VectorService:
                     if metadata.get('created_date'):
                         try:
                             created_date = datetime.fromisoformat(metadata['created_date'])
-                        except:
+                        except Exception:
                             pass
 
                     ticket = Ticket(

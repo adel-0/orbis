@@ -6,7 +6,7 @@ Replaces JSON-based work item storage.
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, and_, or_
+from sqlalchemy import desc, and_
 import logging
 
 from app.db.models import WorkItem as WorkItemModel, DataSource as DataSourceModel
@@ -182,7 +182,7 @@ class WorkItemService:
         """Get total count of work items, optionally restricting to enabled sources."""
         query = self.db.query(WorkItemModel)
         if enabled_sources_only:
-            query = query.join(DataSourceModel).filter(DataSourceModel.enabled == True)
+            query = query.join(DataSourceModel).filter(DataSourceModel.enabled)
         return query.count()
     
     def get_work_items_by_source_name(self, source_name: str, 
@@ -201,10 +201,10 @@ class WorkItemService:
                           enabled_sources_only: bool = True) -> List[WorkItemModel]:
         """Get all work items from all data sources"""
         query = self.db.query(WorkItemModel).join(DataSourceModel)
-        
+
         if enabled_sources_only:
-            query = query.filter(DataSourceModel.enabled == True)
-        
+            query = query.filter(DataSourceModel.enabled)
+
         query = query.options(joinedload(WorkItemModel.data_source)).order_by(desc(WorkItemModel.updated_at))
         
         if limit:

@@ -2,7 +2,7 @@
 Embedding service using local sentence-transformers.
 Provides text embedding generation with token-aware chunking for long documents.
 """
-from typing import Any, Optional
+from typing import Any
 import logging
 import asyncio
 
@@ -183,7 +183,7 @@ class EmbeddingService:
             try:
                 embeddings = self.encode_texts([chunks[0]], batch_size=1)
                 return embeddings[0] if embeddings else []
-            except:
+            except Exception:
                 return []
 
     def get_model_info(self) -> dict:
@@ -220,7 +220,7 @@ class EmbeddingService:
                 mem_allocated = self._torch.cuda.memory_allocated() / 1024**3
                 mem_reserved = self._torch.cuda.memory_reserved() / 1024**3
                 logger.info(f"VRAM before embedding: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
-        except:
+        except Exception:
             pass
 
         # Use asyncio.to_thread to make the sync call async
@@ -233,7 +233,7 @@ class EmbeddingService:
                 mem_reserved = self._torch.cuda.memory_reserved() / 1024**3
                 logger.info(f"VRAM after embedding: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
                 self._torch.cuda.empty_cache()
-        except:
+        except Exception:
             pass
 
         return result

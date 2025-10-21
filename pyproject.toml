@@ -4,3 +4,8 @@ members = [
     "orbis",
     "orbis-search"
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.1",
+]

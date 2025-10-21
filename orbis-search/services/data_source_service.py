@@ -3,7 +3,7 @@ Service for managing data sources in the database.
 Replaces JSON-based data source configuration.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Any
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -112,7 +112,7 @@ class DataSourceService:
         """Get all data sources"""
         query = self.db.query(DataSourceModel)
         if enabled_only:
-            query = query.filter(DataSourceModel.enabled == True)
+            query = query.filter(DataSourceModel.enabled)
         result = query.order_by(DataSourceModel.name).all()
         for ds in result:
             self._decrypt_credentials(ds)

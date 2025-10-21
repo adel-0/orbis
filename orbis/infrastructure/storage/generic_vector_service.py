@@ -186,7 +186,7 @@ class GenericVectorService:
             # Store in ChromaDB - use upsert to handle duplicate IDs
             collection.upsert(
                 ids=ids,
-                embeddings=embeddings,
+                embeddings=unique_embeddings,
                 documents=documents,
                 metadatas=metadatas
             )

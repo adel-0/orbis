@@ -178,7 +178,7 @@ class RerankService:
                                 import torch
                                 if torch.cuda.is_available():
                                     torch.cuda.empty_cache()
-                            except:
+                            except Exception:
                                 pass
 
                     # Add weighted score from this query chunk
@@ -189,7 +189,7 @@ class RerankService:
                     import torch
                     if torch.cuda.is_available():
                         torch.cuda.empty_cache()
-                except:
+                except Exception:
                     pass
 
                 # Log progress
@@ -221,7 +221,7 @@ class RerankService:
                     mem_allocated = torch.cuda.memory_allocated() / 1024**3
                     mem_reserved = torch.cuda.memory_reserved() / 1024**3
                     logger.info(f"VRAM before reranking: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
-            except:
+            except Exception:
                 pass
 
             # Check if query needs chunking
@@ -251,7 +251,7 @@ class RerankService:
                         import torch
                         if torch.cuda.is_available():
                             torch.cuda.empty_cache()
-                    except:
+                    except Exception:
                         pass
 
                 scores = all_scores
@@ -264,7 +264,7 @@ class RerankService:
                     mem_reserved = torch.cuda.memory_reserved() / 1024**3
                     logger.info(f"VRAM after reranking: {mem_allocated:.2f}GB allocated, {mem_reserved:.2f}GB reserved")
                     torch.cuda.empty_cache()
-            except:
+            except Exception:
                 pass
 
             # Attach scores and sort

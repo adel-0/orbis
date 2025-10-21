@@ -149,11 +149,7 @@ class QueryRoutingAgent:
 
     def _generate_instance_description(self, data_source) -> str:
         """Generate description using configuration and context tags only"""
-        from engine.config.data_sources import get_data_source_config
-        
         try:
-            # Get generic source type configuration
-            source_config = get_data_source_config(data_source.source_type)
             base_desc = f"{data_source.name} ({data_source.source_type})"
             
             # Add context tags - let LLM understand their meaning

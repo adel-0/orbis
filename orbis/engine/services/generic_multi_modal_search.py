@@ -12,7 +12,6 @@ from typing import Any
 from engine.config.data_sources import (
     get_all_collection_names,
     get_collection_name,
-    get_data_source_config,
     is_valid_source_type,
     list_data_source_types,
 )

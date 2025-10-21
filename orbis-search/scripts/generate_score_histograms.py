@@ -33,12 +33,12 @@ import requests
 # Ensure project root on sys.path when executed as a standalone script.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
-    sys.path.append(str(PROJECT_ROOT))
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.db.session import DatabaseManager
-from models.schemas import Ticket
-from orbis_core.search import HybridSearchService
-from services.work_item_service import WorkItemService
+# Local imports after sys.path modification
+from app.db.session import DatabaseManager  # noqa: E402
+from models.schemas import Ticket  # noqa: E402
+from services.work_item_service import WorkItemService  # noqa: E402
 
 
 API_ROOT = "http://127.0.0.1:8887"
@@ -404,7 +404,7 @@ def write_outputs(
         json.dump(metadata, fh, indent=2, ensure_ascii=False)
 
     # Print summary
-    print(f"\nEvaluation complete!")
+    print("\nEvaluation complete!")
     print(f"  Queries evaluated: {len(query_evaluations)}")
     print(f"  Score records: {len(score_records)}")
     print(f"  MRR: {ir_metrics.get('mrr', 0.0):.4f}")

@@ -10,7 +10,6 @@ from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.models import Content as ContentModel
-from app.db.models import DataSource
 from app.db.session import get_db_session
 from engine.schemas import BaseContent, Ticket, WikiPageContent
 

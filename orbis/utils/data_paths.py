@@ -4,7 +4,6 @@ Provides centralized path management for local data sources.
 """
 
 from pathlib import Path
-import os
 
 
 def get_project_root() -> Path:

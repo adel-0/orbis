@@ -45,7 +45,6 @@ from pathlib import Path
 import aiohttp
 
 from orbis_core.connectors.azure_devops import AzureDevOpsClient
-from models.schemas import Ticket
 
 
 # -----------------------------
@@ -686,7 +685,6 @@ async def poll_once(state: Dict[str, Any]) -> None:
                         area=area_for_filter,
                         topk=TOPK + 1,  # Get one extra result to account for potential self-reference
                     )
-                    api_summary = None
                 
                 # Filter out the current work item to prevent self-reference
                 filtered_hits = []

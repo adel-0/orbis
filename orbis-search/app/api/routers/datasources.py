@@ -1,6 +1,5 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any
 
 from config import settings
 from app.api.dependencies import get_data_ingestion_service, require_api_key
@@ -11,7 +10,6 @@ from models.schemas import (
     DataSourceListResponse,
 )
 from services.data_ingestion_service import DataIngestionService
-from services.data_source_service import DataSourceService
 
 logger = logging.getLogger(__name__)
 
