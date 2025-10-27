@@ -4,7 +4,6 @@ from functools import lru_cache
 from fastapi import HTTPException, Request
 
 from config.settings import settings
-from engine.agents.llm_routing_agent import QueryRoutingAgent
 from engine.agents.orchestrator import AgenticRAGOrchestrator
 from engine.agents.summary_agent import SearchResultsSummarizer
 from engine.services.generic_data_ingestion import GenericDataIngestionService
@@ -50,10 +49,6 @@ def _create_scheduler() -> SchedulerService:
     return SchedulerService(_create_data_ingestion())
 
 @lru_cache(maxsize=1)
-def _create_query_routing() -> QueryRoutingAgent:
-    return QueryRoutingAgent()
-
-@lru_cache(maxsize=1)
 def _create_agentic_rag() -> AgenticRAGOrchestrator:
     return AgenticRAGOrchestrator(
         vector_service=_create_vector_service(),
@@ -84,9 +79,6 @@ def get_rerank_service(request: Request) -> RerankService:
 
 def get_agentic_rag_orchestrator(request: Request) -> AgenticRAGOrchestrator:
     return _create_agentic_rag()
-
-def get_query_routing_agent(request: Request) -> QueryRoutingAgent:
-    return _create_query_routing()
 
 def get_openai_client_service(request: Request) -> OpenAIClientService:
     return _create_openai_client_service()

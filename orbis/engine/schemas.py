@@ -212,6 +212,13 @@ class ProjectContext(BaseModel):
     """Project context detected from ticket content and metadata"""
     project_code: str | None = Field(None, description="Project code like 'SG', 'VS', or None for general")
 
+class QueryAnalysis(BaseModel):
+    """Unified query analysis result - combines project, intent, and routing"""
+    project_code: str | None = Field(None, description="Detected project code (SG, VS) or None")
+    intent: str = Field(..., description="What the user wants to achieve")
+    recommended_sources: list[str] = Field(..., description="Data source types to search")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in this analysis")
+
 class ScopeAnalysisResult(BaseModel):
     """Result from Scope Analyzer's scope and intent analysis"""
     scope_description: str = Field(..., description="What the content concerns (components, interfaces, areas)")

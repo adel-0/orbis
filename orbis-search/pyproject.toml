@@ -3,7 +3,7 @@ name = "orbis-search"
 version = "1.1.0"
 description = "Lightweight hybrid search engine for Azure DevOps using BM25 and semantic search"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "orbis-core",
     "fastapi==0.116.1",
@@ -36,3 +36,6 @@ torch = { index = "pytorch-cu129" }
 name = "pytorch-cu129"
 url = "https://download.pytorch.org/whl/cu129"
 explicit = true
+
+[tool.setuptools.packages.find]
+include = ["app*", "models*", "services*"]
