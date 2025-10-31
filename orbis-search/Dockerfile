@@ -24,8 +24,8 @@ RUN uv pip install --system torch --index-url https://download.pytorch.org/whl/c
 
 # Install dependencies with ml extras (includes sentence-transformers)
 # Also install orbis-core with ml extras
-RUN uv pip install --system -e ../orbis-core --extra ml && \
-    uv pip install --system -e . --extra ml
+RUN uv pip install --system -e '../orbis-core[ml]' && \
+    uv pip install --system -e '.[ml]'
 
 # Create data directories
 RUN mkdir -p /app/orbis-search/data/database /app/orbis-search/data/chroma_db /app/orbis-search/data/models

@@ -27,55 +27,22 @@ logger = get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        logger.info("🚀 Starting Orbis API...")
-        DatabaseManager.init_database(default_db_name="orbis.db")
-        logger.info(f"✅ Database: {DatabaseManager.get_database_info()}")
+        logger.info("Starting Orbis API...")
+        DatabaseManager.init_database()
+        logger.info(f"Database: {DatabaseManager.get_database_info()}")
 
         # Load data source configurations
         config_loader = ConfigLoader()
         instances_loaded = config_loader.load_all_instances()
-        logger.info(f"✅ Loaded {instances_loaded} data source instances")
+        logger.info(f"Loaded {instances_loaded} data source instances")
 
-        # Auto-ingest wiki data and pre-compute summaries for fast contextual analysis
-        try:
-            from engine.agents.wiki_summarization import WikiSummarizationService
-            from engine.services.generic_data_ingestion import GenericDataIngestionService
-
-            # First, ensure wiki data is ingested (without embedding - that happens via /embed endpoint)
-            logger.info("🔄 Auto-ingesting wiki data...")
-            ingestion_service = GenericDataIngestionService()
-
-            # Get only wiki data sources
-            from infrastructure.data_processing.data_source_service import (
-                DataSourceService,
-            )
-            with get_db_session() as db:
-                ds_service = DataSourceService(db)
-                wiki_sources = [ds.name for ds in ds_service.get_enabled_sources() if ds.source_type == "azdo_wiki"]
-
-            ingestion_result = await ingestion_service.ingest_all_sources(
-                source_names=wiki_sources,  # Only ingest wiki sources
-                force_full_sync=False,
-                skip_embedding=True  # Embedding happens via /embed endpoint, not during startup
-            )
-
-            if ingestion_result.get("total_processed", 0) == 0:
-                logger.info("ℹ️ No new wiki data to ingest")
-
-            # Then pre-compute summaries (no longer needs vector/embedding services)
-            wiki_service = WikiSummarizationService()
-            await wiki_service.precompute_all_project_summaries()
-        except Exception as e:
-            logger.warning(f"⚠️ Wiki summary pre-computation failed: {e}")
-            logger.debug("Wiki summarization will work on-demand (slower first requests)")
-
-        logger.info("🎯 API startup completed successfully - agentic RAG system ready")
+        logger.info("API startup completed successfully - agentic RAG system ready")
         yield
     except Exception as exc:
-        logger.error(f"❌ Startup failed: {exc}")
+        logger.error(f"Startup failed: {exc}")
         raise
     finally:
-        logger.info("🛑 Shutting down API - no complex service cleanup needed")
+        logger.info("Shutting down API - no complex service cleanup needed")
 
 
 app = FastAPI(

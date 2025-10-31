@@ -33,7 +33,7 @@ class Settings:
 
     # Local embedding settings
     LOCAL_EMBEDDING_MODEL: str = get_env("LOCAL_EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
-    LOCAL_RERANK_MODEL: str = get_env("LOCAL_RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
+    RERANK_MODEL: str = get_env("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 
     # Cache directories for models
     SENTENCE_TRANSFORMERS_HOME: str = get_env("SENTENCE_TRANSFORMERS_HOME", "data/models/sentence-transformers")
