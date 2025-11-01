@@ -44,7 +44,7 @@ from pathlib import Path
 
 import aiohttp
 
-from orbis_core.connectors.azure_devops import AzureDevOpsClient
+from orbis_core.connectors.azure_devops import Client
 
 
 # -----------------------------
@@ -521,7 +521,7 @@ async def poll_once(state: Dict[str, Any]) -> None:
     if USE_OAUTH2:
         if not CLIENT_ID or not CLIENT_SECRET or not TENANT_ID:
             raise SystemExit("OAuth2 requires CLIENT_ID, CLIENT_SECRET, and TENANT_ID to be set.")
-        client = AzureDevOpsClient(
+        client = Client(
             AZDO_ORG, 
             AZDO_PROJECT, 
             client_id=CLIENT_ID,
@@ -532,7 +532,7 @@ async def poll_once(state: Dict[str, Any]) -> None:
     else:
         if not AZDO_PAT:
             raise SystemExit("Please set AZDO_PAT constant when not using OAuth2.")
-        client = AzureDevOpsClient(AZDO_ORG, AZDO_PROJECT, auth_token=AZDO_PAT, use_oauth2=False)
+        client = Client(AZDO_ORG, AZDO_PROJECT, auth_token=AZDO_PAT, use_oauth2=False)
     last_run: Optional[str] = state.get("last_run")
     now_iso = _now_iso()
     log(f"Polling for changes (last_run={last_run})")

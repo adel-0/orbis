@@ -18,7 +18,7 @@ from .constants import API_VERSIONS, CORE_WORKITEM_FIELDS, DEFAULT_BATCH_SIZE
 logger = logging.getLogger(__name__)
 
 
-class AzureDevOpsClient(AzureDevOpsAuthMixin):
+class Client(AzureDevOpsAuthMixin):
     """Client for Azure DevOps REST API operations with support for PAT and OAuth2 authentication"""
 
     def __init__(self, organization: str, project: str, auth_token: str = None,
@@ -66,8 +66,8 @@ class AzureDevOpsClient(AzureDevOpsAuthMixin):
     # _get_auth_headers() and _refresh_oauth_token() are now provided by the mixin
 
     @classmethod
-    def from_config(cls, config: dict[str, Any]) -> 'AzureDevOpsClient':
-        """Create an AzureDevOpsClient from a configuration dictionary"""
+    def from_config(cls, config: dict[str, Any]) -> 'Client':
+        """Create a Client from a configuration dictionary"""
         auth_type = config.get('auth_type', 'pat')
         if auth_type == "pat":
             return cls(
@@ -93,8 +93,8 @@ class AzureDevOpsClient(AzureDevOpsAuthMixin):
             raise ValueError(f"Unsupported authentication type: {auth_type}")
 
     @classmethod
-    def from_data_source(cls, data_source: Any) -> 'AzureDevOpsClient':
-        """Create an AzureDevOpsClient from a DataSource model object"""
+    def from_data_source(cls, data_source: Any) -> 'Client':
+        """Create a Client from a DataSource model object"""
         auth_type = getattr(data_source, 'auth_type', 'pat')
         if auth_type == "pat":
             return cls(

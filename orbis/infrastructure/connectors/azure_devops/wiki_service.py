@@ -31,8 +31,8 @@ class WikiService:
         doesn't provide reliable incremental sync capabilities for wiki pages.
         """
         try:
-            from infrastructure.connectors.azure_devops.azure_devops_wiki_client import (
-                AzureDevOpsWikiClient,
+            from infrastructure.connectors.azure_devops.wiki_client import (
+                WikiClient,
             )
 
             # Use discovery mode unless specific included_wikis are provided
@@ -45,7 +45,7 @@ class WikiService:
 
                 # Discover all wikis to get their IDs
                 if config.get('auth_type') == 'oauth2':
-                    discovered_wikis = await AzureDevOpsWikiClient.discover_wikis(
+                    discovered_wikis = await WikiClient.discover_wikis(
                         organization=config['organization'],
                         project=config['project'],
                         client_id=config['client_id'],
@@ -54,7 +54,7 @@ class WikiService:
                         use_oauth2=True
                     )
                 else:
-                    discovered_wikis = await AzureDevOpsWikiClient.discover_wikis(
+                    discovered_wikis = await WikiClient.discover_wikis(
                         organization=config['organization'],
                         project=config['project'],
                         auth_token=config['pat'],
@@ -74,7 +74,7 @@ class WikiService:
                         wiki_info = wiki_lookup[wiki_name]
 
                         if config.get('auth_type') == 'oauth2':
-                            client = AzureDevOpsWikiClient.create_for_discovered_wiki(
+                            client = WikiClient.create_for_discovered_wiki(
                                 organization=config['organization'],
                                 project=config['project'],
                                 wiki_info=wiki_info,
@@ -84,7 +84,7 @@ class WikiService:
                                 use_oauth2=True
                             )
                         else:
-                            client = AzureDevOpsWikiClient.create_for_discovered_wiki(
+                            client = WikiClient.create_for_discovered_wiki(
                                 organization=config['organization'],
                                 project=config['project'],
                                 wiki_info=wiki_info,
@@ -100,7 +100,7 @@ class WikiService:
             else:
                 # Discovery mode - get all wikis
                 if config.get('auth_type') == 'oauth2':
-                    discovered_wikis = await AzureDevOpsWikiClient.discover_wikis(
+                    discovered_wikis = await WikiClient.discover_wikis(
                         organization=config['organization'],
                         project=config['project'],
                         client_id=config['client_id'],
@@ -109,7 +109,7 @@ class WikiService:
                         use_oauth2=True
                     )
                 else:
-                    discovered_wikis = await AzureDevOpsWikiClient.discover_wikis(
+                    discovered_wikis = await WikiClient.discover_wikis(
                         organization=config['organization'],
                         project=config['project'],
                         auth_token=config['pat'],
@@ -126,7 +126,7 @@ class WikiService:
                 for wiki_info in filtered_wikis:
                     try:
                         if config.get('auth_type') == 'oauth2':
-                            client = AzureDevOpsWikiClient.create_for_discovered_wiki(
+                            client = WikiClient.create_for_discovered_wiki(
                                 organization=config['organization'],
                                 project=config['project'],
                                 wiki_info=wiki_info,
@@ -136,7 +136,7 @@ class WikiService:
                                 use_oauth2=True
                             )
                         else:
-                            client = AzureDevOpsWikiClient.create_for_discovered_wiki(
+                            client = WikiClient.create_for_discovered_wiki(
                                 organization=config['organization'],
                                 project=config['project'],
                                 wiki_info=wiki_info,

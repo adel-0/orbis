@@ -64,7 +64,7 @@ class WorkItemService:
             except (ValueError, AttributeError):
                 return None
         
-        # Standardized internal field names expected from AzureDevOpsClient:
+        # Standardized internal field names expected from Client:
         # Title, Description, Comments, State, WorkItemType, CreatedDate, ChangedDate,
         # ResolvedDate (optional), AreaPath, IterationPath (optional), Tags (semicolon string)
         

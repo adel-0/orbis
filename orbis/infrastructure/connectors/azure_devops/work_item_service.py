@@ -242,12 +242,12 @@ class WorkItemService:
             import aiohttp
 
             from orbis_core.connectors.azure_devops import (
-                AzureDevOpsClient,
+                Client,
             )
 
             # Create Azure DevOps client from config
             if config.get('auth_type') == 'oauth2':
-                client = AzureDevOpsClient(
+                client = Client(
                     organization=config['organization'],
                     project=config['project'],
                     client_id=config['client_id'],
@@ -256,7 +256,7 @@ class WorkItemService:
                     use_oauth2=True
                 )
             else:
-                client = AzureDevOpsClient(
+                client = Client(
                     organization=config['organization'],
                     project=config['project'],
                     auth_token=config['pat']

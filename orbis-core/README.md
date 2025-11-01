@@ -10,8 +10,8 @@ See the [main README](../README.md) for workspace setup.
 **Azure DevOps Connector** - REST API client with PAT/OAuth2 authentication for work items, queries, and projects.
 
 ```python
-from orbis_core.connectors.azure_devops import AzureDevOpsClient
-client = AzureDevOpsClient(organization="myorg", pat="token")
+from orbis_core.connectors.azure_devops import Client
+client = Client(organization="myorg", pat="token")
 work_items = await client.get_work_items([123, 456])
 ```
 

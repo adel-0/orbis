@@ -12,7 +12,7 @@ from app.db.models import IngestionLog
 from app.db.session import get_db_session
 from services.data_source_service import DataSourceService
 from services.work_item_service import WorkItemService
-from orbis_core.connectors.azure_devops import AzureDevOpsClient
+from orbis_core.connectors.azure_devops import Client
 from services.embedding_service import EmbeddingService
 from services.vector_service import VectorService
 from orbis_core.search import BM25Service
@@ -63,7 +63,7 @@ class DataIngestionService:
             try:
                 # Initialize Azure DevOps client using the from_data_source class method
                 # This automatically handles both PAT and OAuth2 authentication
-                client = AzureDevOpsClient.from_data_source(data_source)
+                client = Client.from_data_source(data_source)
                 
                 # Determine last run time for incremental sync
                 last_run_time = None

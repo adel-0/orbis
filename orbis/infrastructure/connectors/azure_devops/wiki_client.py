@@ -18,7 +18,7 @@ from orbis_core.utils.constants import DEFAULT_RATE_LIMIT_DELAY
 
 logger = logging.getLogger(__name__)
 
-class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
+class WikiClient(AzureDevOpsAuthMixin):
     """Client for Azure DevOps Wiki REST API operations"""
 
     def __init__(self, organization: str, project: str, **kwargs):
@@ -346,7 +346,7 @@ class AzureDevOpsWikiClient(AzureDevOpsAuthMixin):
     @classmethod
     def create_for_discovered_wiki(cls, organization: str, project: str, wiki_info: dict[str, Any],
                                  auth_token: str = None, client_id: str = None, client_secret: str = None,
-                                 tenant_id: str = None, use_oauth2: bool = False) -> 'AzureDevOpsWikiClient':
+                                 tenant_id: str = None, use_oauth2: bool = False) -> 'WikiClient':
         """Create a client instance for a specific discovered wiki"""
         wiki_name = wiki_info.get('name', '')
         wiki_id = wiki_info.get('wiki_id')
